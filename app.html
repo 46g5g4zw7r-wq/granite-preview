@@ -150,6 +150,11 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 .btn.gold:active{box-shadow:0 2px 0 #6f5322,inset 0 2px 5px rgba(0,0,0,.25)}
 html[data-theme="dark"] .btn,html[data-theme="dark"] .sm,html[data-theme="dark"] .seg button{background:linear-gradient(180deg,#3d4046,#24262b);color:#ece6da;border-color:#15171a;box-shadow:0 6px 0 #101114,0 12px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12)}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+/* Цвет при нажатии: пока палец на кнопке, она меняет цвет; отпустили — возвращается */
+.btn:active,.sm:active,.seg button:active{background:linear-gradient(180deg,#f2d49b,#d4a25c);color:#2a1d07;border-color:#a87f3a;transition:transform .05s ease,background .05s ease}
+.btn.gold:active{background:linear-gradient(180deg,#f7e2b0,#e0b06a);color:#2a1d07;border-color:#c09048}
+html[data-theme="dark"] .btn:active,html[data-theme="dark"] .sm:active,html[data-theme="dark"] .seg button:active{background:linear-gradient(180deg,#8a6a2e,#5c4620);color:#fff3d6;border-color:#c09048}
+html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a062,#8a6a2e);color:#fff}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
