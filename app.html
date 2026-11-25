@@ -199,7 +199,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     <label><span id="iWL"></span><input id="iW" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
     <label><span id="iHL"></span><input id="iH" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
     <label><span id="iFormL"></span><select id="iForm"></select></label>
-    <label><span id="iPhL"></span><input id="iPh" type="file" accept="image/*"></label>
+    <label><span id="iPhL"></span><input id="iPh" type="file" accept="image/*" capture="environment"></label>
     <p class="merr" id="iErr" role="alert"></p>
     <div class="mbtns">
       <button type="button" class="btn" id="iCancel"></button>
@@ -1005,10 +1005,10 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 
   /* ---------- Новый кусок (работник принимает плиту или остаток и меряет) ---------- */
   var ITEM_T = {
-    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", cancel: "Отмена", ok: "Сохранить" },
-    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", cancel: "Annuler", ok: "Enregistrer" },
-    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Photo (optional)", err: "Fill in the name, cell and sizes above zero.", cancel: "Cancel", ok: "Save" },
-    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", cancel: "Cancelar", ok: "Guardar" }
+    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", cancel: "Отмена", ok: "Сохранить" },
+    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", cancel: "Annuler", ok: "Enregistrer" },
+    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", cancel: "Cancel", ok: "Save" },
+    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", cancel: "Cancelar", ok: "Guardar" }
   };
   var itemForm = document.getElementById("itemForm");
   var iName = document.getElementById("iName"), iKind = document.getElementById("iKind");
