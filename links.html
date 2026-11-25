@@ -13,17 +13,15 @@
       radial-gradient(ellipse at 85% 85%, rgba(201,164,99,.12), transparent 60%),
       linear-gradient(160deg, #1a1714 0%, #0d0c0b 55%, #161311 100%); }
   .scene { position:fixed; inset:0; z-index:-1; perspective:1100px; perspective-origin:50% 40%; pointer-events:none; overflow:hidden; }
-  .plate { position:absolute; left:50%; top:50%; width:var(--w,180px); height:var(--h,110px); margin:calc(var(--h,110px) / -2) 0 0 calc(var(--w,180px) / -2); transform-style:preserve-3d; animation: float var(--t,22s) linear infinite; animation-delay: var(--delay,0s); }
+  .plate { position:absolute; left:50%; top:50%; width:var(--w,180px); height:var(--h,110px); margin:calc(var(--h,110px) / -2) 0 0 calc(var(--w,180px) / -2); transform-style:preserve-3d; animation: float var(--t,22s) ease-in-out infinite alternate; animation-delay: var(--delay,0s); }
   .plate .face { position:absolute; inset:0; border-radius:8px; overflow:hidden; backface-visibility:hidden; box-shadow: 0 14px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,240,210,.18); background-color:#2a2622; background-size:cover; background-position:center; }
   .plate .face.back { transform: rotateY(180deg); }
   .plate.ph-u .face { background-image:url("https://images.unsplash.com/photo-1733085097233-66441dedba94?fm=jpg&q=60&w=900&auto=format&fit=crop"); }
   .plate.ph-p .face { background-image:url("https://images.pexels.com/photos/5506219/pexels-photo-5506219.jpeg?auto=compress&cs=tinysrgb&w=900"); }
   @keyframes float {
-    0%   { transform: translate3d(-34vw,-18vh,-260px) rotateX(18deg) rotateY(0deg); }
-    25%  { transform: translate3d(-8vw,22vh,-120px) rotateX(-12deg) rotateY(180deg); }
-    50%  { transform: translate3d(30vw,-6vh,-340px) rotateX(10deg) rotateY(360deg); }
-    75%  { transform: translate3d(12vw,26vh,-150px) rotateX(-18deg) rotateY(540deg); }
-    100% { transform: translate3d(-34vw,-18vh,-260px) rotateX(18deg) rotateY(720deg); }
+    0%   { transform: translate3d(-30vw,-14vh,-200px) rotateX(8deg) rotateY(-14deg); }
+    50%  { transform: translate3d(26vw,10vh,-160px) rotateX(-6deg) rotateY(12deg); }
+    100% { transform: translate3d(-30vw,-14vh,-200px) rotateX(8deg) rotateY(-14deg); }
   }
   .p1 { --w:200px; --h:124px; --t:24s; --delay:-2s; }
   .p2 { --w:150px; --h:96px;  --t:19s; --delay:-9s; }
