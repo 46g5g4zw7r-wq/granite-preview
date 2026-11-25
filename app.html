@@ -176,6 +176,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
     <input type="file" id="photoGal" accept="image/*" hidden>
     <button type="button" class="btn" id="measureBtn">Измерить</button>
+    <a class="btn" id="printBtn" href="print.html" target="_blank" rel="noopener"></a>
     <button type="button" class="btn gold" id="add">+ Добавить</button>
   </section>
 
@@ -345,6 +346,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     document.getElementById("themeBtn").setAttribute("aria-label", U.theme);
     document.querySelector(".lang").setAttribute("aria-label", U.langLbl);
     document.getElementById("printLink").textContent = U.printLink;
+    document.getElementById("printBtn").textContent = "🖨️ " + U.printLink;
     renderCompanyBox();
     var segBtns = document.querySelectorAll("#formSeg button");
     var counts = { all: ITEMS.length, slab: 0, rest: 0 };
