@@ -981,6 +981,14 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     setTab(Array.prototype.indexOf.call(this.children, b));
   });
 
+  /* Кнопка «+ Добавить»: без входа открывает вход администратора; с входом переходит к форме добавления */
+  document.getElementById("add").addEventListener("click", function () {
+    if (!admin) { openGate(storedPw() ? "in" : "set"); return; }
+    if (currentTab !== 4 && currentTab !== 5) setTab(4);
+    var f = document.querySelector("#view .addform input");
+    if (f) { f.scrollIntoView({ block: "center" }); f.focus(); }
+  });
+
   /* Испанские словари объявлены выше основных объектов, поэтому присваиваем их здесь */
   ROLES.es = ES_ROLES;
   ADMIN.es = ES_ADMIN;
