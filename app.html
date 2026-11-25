@@ -768,7 +768,8 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
         return;
       }
       if (!hit) { foundText.textContent = L.noQr; return; }
-      cutPiece(hit);
+      found.hidden = true;
+      openPick("job", hit);
     }).catch(function () { foundText.textContent = L.noQr; });
   }
 
