@@ -219,7 +219,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       kind: { quartz: "кварц", granite: "гранит" },
       cell: "ячейка", move: "Переместить", photo: "Фото", sample: "Пример данных для превью — не настоящий склад.",
       camera: "Камера", gallery: "Галерея", reset: "Сбросить",
-      measure: "Измерить", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (мм).", mW: "Ширина, мм", mH: "Высота, мм", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
+      measure: "Измерить", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (дюймы).", mW: "Ширина, дюймы", mH: "Высота, дюймы", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
     },
     fr: {
       brand: "Entrepôt de pierre", role: "Bureau", logout: "Quitter",
@@ -230,7 +230,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       kind: { quartz: "quartz", granite: "granit" },
       cell: "emplacement", move: "Déplacer", photo: "Photo", sample: "Exemple de données pour l’aperçu — pas un vrai stock.",
       camera: "Appareil photo", gallery: "Galerie", reset: "Réinitialiser",
-      measure: "Mesurer", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (mm).", mW: "Largeur, mm", mH: "Hauteur, mm", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
+      measure: "Mesurer", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (pouces).", mW: "Largeur, pouces", mH: "Hauteur, pouces", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
     },
     en: {
       brand: "Stone Warehouse", role: "Office", logout: "Sign out",
@@ -241,7 +241,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       kind: { quartz: "quartz", granite: "granite" },
       cell: "cell", move: "Move", photo: "Photo", sample: "Sample data for the preview — not a real warehouse.",
       camera: "Camera", gallery: "Gallery", reset: "Reset",
-      measure: "Measure", mTitle: "Remnant size", mNote: "Manual entry for now. In the second stage the app will find the ArUco marker in the photo and calculate the size (mm).", mW: "Width, mm", mH: "Height, mm", mOk: "Confirm", mCancel: "Cancel", mBad: "Enter sizes greater than zero.", mSaved: "Preview: sizes are not saved to the database.", foundTitle: "Similar by colour and veining (rough comparison)", photoErr: "Could not read the photo"
+      measure: "Measure", mTitle: "Remnant size", mNote: "Manual entry for now. In the second stage the app will find the ArUco marker in the photo and calculate the size (in).", mW: "Width, in", mH: "Height, in", mOk: "Confirm", mCancel: "Cancel", mBad: "Enter sizes greater than zero.", mSaved: "Preview: sizes are not saved to the database.", foundTitle: "Similar by colour and veining (rough comparison)", photoErr: "Could not read the photo"
     }
   };
 
@@ -265,6 +265,14 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   function displayName(x) {
     var t = NAMES[lang];
     return (t && t[x.name]) || x.name;
+  }
+
+  // Размеры хранятся в миллиметрах, на экране показываются в дюймах (1 дюйм = 25,4 мм).
+  function mmToIn(mm) { return String(Math.round(mm / 25.4 * 10) / 10); }
+  function fmtSize(text) {
+    return String(text).replace(/(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)/, function (m, a, b) {
+      return mmToIn(+a) + " × " + mmToIn(+b);
+    });
   }
 
   var lang = "ru";
@@ -385,7 +393,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
           '<div class="actions"><button type="button" class="sm mv"></button><button type="button" class="sm ph2"></button></div>' +
         '</div>';
       c.querySelector("h3").textContent = displayName(x);
-      c.querySelector(".meta").textContent = T.kind[x.kind] + " · " + x.size + " · " + T.cell + " " + x.cell;
+      c.querySelector(".meta").textContent = T.kind[x.kind] + " · " + fmtSize(x.size) + " · " + T.cell + " " + x.cell;
       var badge = c.querySelector(".badge");
       badge.textContent = T.st[x.st];
       badge.className = "badge st-" + x.st;
@@ -546,8 +554,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     camera: "Cámara", gallery: "Galería", reset: "Restablecer",
     foundTitle: "Similares por color y veta (comparación aproximada)", photoErr: "No se pudo leer la foto",
     measure: "Medir", mTitle: "Medidas de la pieza",
-    mNote: "Por ahora se introduce a mano. En la segunda etapa la app encontrará el marcador ArUco en la foto y calculará las medidas (mm).",
-    mW: "Ancho, mm", mH: "Alto, mm", mOk: "Confirmar", mCancel: "Cancelar",
+    mNote: "Por ahora se introduce a mano. En la segunda etapa la app encontrará el marcador ArUco en la foto y calculará las medidas (pulg.).",
+    mW: "Ancho, pulg.", mH: "Alto, pulg.", mOk: "Confirmar", mCancel: "Cancelar",
     mBad: "Introduzca medidas mayores que cero.", mSaved: "Vista previa: las medidas no se guardan en la base."
   };
   var ES_ROLES = { admin: "Administrador", staff: "Oficina" };
@@ -584,7 +592,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       ["Empleado 1", "Oficina", "—", "día"],
       ["Empleado 2", "Pulidor", "—", "día"],
       ["Empleado 3", "Aserrador", "—", "noche"] ] },
-    { title: "Catálogo", cols: ["Nombre", "Tipo", "Tamaño, mm", "Celda"], rows: [
+    { title: "Catálogo", cols: ["Nombre", "Tipo", "Tamaño, pulg.", "Celda"], rows: [
       ["Onda de montaña", "cuarzo", "2400 × 1200", "A-01"],
       ["Calacatta Borghini Gold", "cuarzo", "2400 × 1100", "A-02"],
       ["Scandi Black", "cuarzo", "1800 × 600", "B-04"],
@@ -671,7 +679,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
         ["Сотрудник 1", "Офис", "—", "день"],
         ["Сотрудник 2", "Полировщик", "—", "день"],
         ["Сотрудник 3", "Пильщик", "—", "ночь"] ] },
-      { title: "Каталог", cols: ["Название", "Тип", "Размер, мм", "Ячейка"], rows: [
+      { title: "Каталог", cols: ["Название", "Тип", "Размер, дюймы", "Ячейка"], rows: [
         ["Горная волна", "кварц", "2400 × 1200", "A-01"],
         ["Calacatta Borghini Gold", "кварц", "2400 × 1100", "A-02"],
         ["Scandi Black", "кварц", "1800 × 600", "B-04"],
@@ -698,7 +706,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
         ["Employé 1", "Bureau", "—", "jour"],
         ["Employé 2", "Polisseur", "—", "jour"],
         ["Employé 3", "Scieur", "—", "nuit"] ] },
-      { title: "Catalogue", cols: ["Nom", "Type", "Taille, mm", "Emplacement"], rows: [
+      { title: "Catalogue", cols: ["Nom", "Type", "Taille, pouces", "Emplacement"], rows: [
         ["Horn wave", "quartz", "2400 × 1200", "A-01"],
         ["Calacatta Borghini Gold", "quartz", "2400 × 1100", "A-02"],
         ["Scandi Black", "quartz", "1800 × 600", "B-04"],
@@ -725,7 +733,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
         ["Employee 1", "Office", "—", "day"],
         ["Employee 2", "Polisher", "—", "day"],
         ["Employee 3", "Sawyer", "—", "night"] ] },
-      { title: "Catalog", cols: ["Name", "Type", "Size, mm", "Cell"], rows: [
+      { title: "Catalog", cols: ["Name", "Type", "Size, in", "Cell"], rows: [
         ["Mountain wave", "quartz", "2400 × 1200", "A-01"],
         ["Calacatta Borghini Gold", "quartz", "2400 × 1100", "A-02"],
         ["Scandi Black", "quartz", "1800 × 600", "B-04"],
@@ -848,7 +856,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       r.style.gridTemplateColumns = "repeat(" + V.cols.length + ", minmax(0, 1fr))" + (editable ? " auto" : "");
       cells.forEach(function (c) {
         var s = document.createElement("span");
-        s.textContent = c;
+        s.textContent = fmtSize(c);
         r.appendChild(s);
       });
       if (editable) {
