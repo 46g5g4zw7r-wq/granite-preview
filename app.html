@@ -235,6 +235,17 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       <button type="button" class="btn gold" id="iOk"></button>
     </div>
   </section>
+  <section class="measure" id="pickForm" hidden>
+    <h3 id="pkTitle"></h3>
+    <p class="mnote" id="pkNote"></p>
+    <label id="pkTextWrap"><span id="pkLabel"></span><input id="pkText" type="text" autocomplete="off"></label>
+    <label id="pkSelWrap"><span id="pkSelLabel"></span><select id="pkSelect"></select></label>
+    <p class="merr" id="pkErr" role="alert"></p>
+    <div class="mbtns">
+      <button type="button" class="btn" id="pkCancel"></button>
+      <button type="button" class="btn gold" id="pkOk"></button>
+    </div>
+  </section>
   <section class="measure" id="measure" hidden>
     <h3 id="mTitle"></h3>
     <p class="mnote" id="mNote"></p>
@@ -415,6 +426,84 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     });
   }
 
+  // Выбор работы или причины брака
+  var pickForm = document.getElementById("pickForm");
+  var pkText = document.getElementById("pkText"), pkSelect = document.getElementById("pkSelect");
+  var pkTextWrap = document.getElementById("pkTextWrap"), pkSelWrap = document.getElementById("pkSelWrap");
+  var pkErr = document.getElementById("pkErr");
+  var pickMode = "", pickPiece = null;
+  function openPick(mode, x) {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    pickMode = mode; pickPiece = x;
+    pkErr.textContent = "";
+    if (mode === "job") {
+      document.getElementById("pkTitle").textContent = L.jobTitle;
+      document.getElementById("pkNote").textContent = L.jobNote;
+      document.getElementById("pkLabel").textContent = L.jobLabel;
+      pkTextWrap.hidden = false; pkSelWrap.hidden = true;
+      pkText.value = "";
+    } else {
+      document.getElementById("pkTitle").textContent = L.brakTitle;
+      document.getElementById("pkNote").textContent = L.brakNote;
+      document.getElementById("pkSelLabel").textContent = L.brakLabel;
+      pkTextWrap.hidden = true; pkSelWrap.hidden = false;
+      pkSelect.innerHTML = "";
+      [L.r1, L.r2, L.r3].forEach(function (r) { pkSelect.add(new Option(r, r)); });
+    }
+    document.getElementById("pkCancel").textContent = L.cancel;
+    document.getElementById("pkOk").textContent = L.ok;
+    pickForm.hidden = false;
+    setTimeout(function () { if (mode === "job") pkText.focus(); }, 40);
+  }
+  function logPiece(entry) {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem("granite.pieceLog") || "[]"); } catch (e) { list = []; }
+    list.unshift(Object.assign({ time: new Date().toISOString() }, entry));
+    try { localStorage.setItem("granite.pieceLog", JSON.stringify(list.slice(0, 300))); } catch (e) {}
+  }
+  function savePieces() { try { localStorage.setItem(ITEM_KEY, JSON.stringify(ADDED)); } catch (e) {} }
+  document.getElementById("pkCancel").addEventListener("click", function () { pickForm.hidden = true; });
+  document.getElementById("pkOk").addEventListener("click", function () {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    var x = pickPiece;
+    if (!x) { pickForm.hidden = true; return; }
+    if (pickMode === "job") {
+      var job = pkText.value.trim();
+      if (!job) { pkErr.textContent = L.jobErr; return; }
+      x.job = job; x.st = "job";
+      logPiece({ code: x.code || "", name: x.name, action: "job", job: job });
+    } else {
+      var reason = pkSelect.value;
+      x.st = "brak"; x.reason = reason;
+      logPiece({ code: x.code || "", name: x.name, action: "brak", reason: reason });
+    }
+    savePieces();
+    pickForm.hidden = true;
+    renderGrid();
+    if (currentTab > 0) renderView(currentTab);
+  });
+
+  // Строки «Заказов»: кусок в работе
+  function readJobRows() {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    return ITEMS.filter(function (x) { return x.st === "job"; }).map(function (x) {
+      return { cells: [x.job || "—", "—", displayName(x), "1 шт.", L.jobStatus], src: "l", k: 0 };
+    });
+  }
+  // Записи о распиле, работе, браке и мусоре — в журнал
+  function readPieceLog() {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem("granite.pieceLog") || "[]"); } catch (e) { list = []; }
+    return list.map(function (e) {
+      var d = new Date(e.time);
+      var act = e.action === "cut" ? L.logCut : e.action === "job" ? L.logJob + " " + (e.job || "")
+              : e.action === "brak" ? L.logBrak + ": " + (e.reason || "") : L.logTrash;
+      return { cells: [d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
+                       act, e.name || "", e.code || "—", "—"], src: "l", k: 0 };
+    });
+  }
+
   // Кусок выброшен: убираем из базы и пишем в журнал
   function trashPiece(x) {
     var L = ITEM_T[lang] || ITEM_T.ru;
@@ -433,7 +522,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   function renderGrid() {
     var T = DICT[lang];
     grid.innerHTML = "";
-    var pool = (matches || ITEMS).filter(function (x) { return formFilter === "all" || formOf(x) === formFilter; });
+    var pool = (matches || ITEMS).filter(function (x) { return (formFilter === "all" || formOf(x) === formFilter) && x.st !== "job" && x.st !== "brak"; });
     var shown = pool.filter(function (x) {
       var q = query.toLowerCase();
       return !q || x.name.toLowerCase().indexOf(q) !== -1 || x.cell.toLowerCase().indexOf(q) !== -1 || String(x.code || "").toLowerCase().indexOf(q) !== -1;
@@ -454,6 +543,13 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       var tb = c.querySelector(".trash");
       tb.textContent = (ITEM_T[lang] || ITEM_T.ru).trash;
       tb.addEventListener("click", function () { trashPiece(x); });
+      var LB = ITEM_T[lang] || ITEM_T.ru;
+      var mvb = c.querySelector(".mv");
+      mvb.textContent = LB.jobBtn;
+      mvb.addEventListener("click", function () { openPick("job", x); });
+      var phb = c.querySelector(".ph2");
+      phb.textContent = LB.brakBtn;
+      phb.addEventListener("click", function () { openPick("brak", x); });
       if (x.code && window.QRCode) {
         var qbox = document.createElement("div");
         qbox.className = "qr";
@@ -934,8 +1030,9 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     var base = rows.map(function (cells, k) { return { cells: cells, src: "b", k: k }; })
                    .filter(function (x) { return !rem[x.k]; });
     var extra = (editState.extra[i] || []).map(function (cells, k) { return { cells: cells, src: "e", k: k }; });
-    var logRows = i === 2 ? readWorkLog() : [];
-    return logRows.concat(base).concat(extra);
+    var logRows = i === 2 ? readWorkLog().concat(readPieceLog()) : [];
+    var jobRows = i === 3 ? readJobRows() : [];
+    return logRows.concat(jobRows).concat(base).concat(extra);
   }
   // Отметки со страницы работников (worker.html), новые сверху
   function readWorkLog() {
@@ -1142,10 +1239,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 
   /* ---------- Новый кусок (работник принимает плиту или остаток и меряет) ---------- */
   var ITEM_T = {
-    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить", find: "Найти похожие", none: "Похожих кусков в базе нет.", needPhoto: "Сначала сделайте фото.", took: "В распил: {name} ({code}). Записано в журнал.", noCode: "Код «{code}» в базе не найден. Заведите кусок через «+ Добавить».", noQr: "QR не прочитан. Сфотографируйте ближе, чтобы QR был в кадре целиком.", codeL: "Код с этикетки", scanIn: "Код со сканера + Enter", dup: "Такой код уже есть в базе.", newCode: "Новый код. Укажите название, ячейку и размеры, затем сделайте фото.", auto: "Штрих-код прочитан: название и код записаны. Теперь сфотографируйте слаб, он сохранится сам.", added: "Добавлено: {name} ({code}). Размеры и ячейку можно уточнить позже.", trash: "В мусор", confirmTrash: "Выбросить «{name}» и удалить из базы?" },
-    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer", find: "Chercher similaires", none: "Aucune pièce semblable dans la base.", needPhoto: "Prenez d’abord une photo.", took: "En découpe : {name} ({code}). Noté dans le journal.", noCode: "Code « {code} » introuvable. Ajoutez la pièce avec « + Ajouter ».", noQr: "QR non lu. Prenez la photo plus près, le QR entier dans le cadre.", codeL: "Code de l’étiquette", scanIn: "Code du scanner + Entrée", dup: "Ce code existe déjà.", newCode: "Nouveau code. Indiquez le nom, l’emplacement et les dimensions, puis prenez la photo.", auto: "Code-barres lu : nom et code enregistrés. Photographiez maintenant la plaque, elle sera enregistrée automatiquement.", added: "Ajouté : {name} ({code}). Dimensions et emplacement à préciser plus tard.", trash: "Jeter", confirmTrash: "Jeter « {name} » et le supprimer de la base ?" },
-    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save", find: "Find similar", none: "No similar pieces in the base.", needPhoto: "Take a photo first.", took: "Sent to cutting: {name} ({code}). Logged.", noCode: "Code “{code}” not found. Add the piece with “+ Add”.", noQr: "QR not read. Take the photo closer, with the whole QR in frame.", codeL: "Label code", scanIn: "Scanner code + Enter", dup: "This code is already in the base.", newCode: "New code. Enter the name, cell and size, then take the photo.", auto: "Barcode read: name and code saved. Now photograph the slab, it will be saved automatically.", added: "Added: {name} ({code}). Size and cell can be filled in later.", trash: "Discard", confirmTrash: "Discard “{name}” and delete it from the base?" },
-    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar", find: "Buscar similares", none: "No hay piezas parecidas en la base.", needPhoto: "Primero haga una foto.", took: "En corte: {name} ({code}). Anotado en el diario.", noCode: "Código «{code}» no encontrado. Añada la pieza con « + Añadir ».", noQr: "No se leyó el QR. Haga la foto más cerca, con todo el QR en el encuadre.", codeL: "Código de la etiqueta", scanIn: "Código del escáner + Enter", dup: "Este código ya está en la base.", newCode: "Código nuevo. Indique el nombre, la celda y las medidas, y luego haga la foto.", auto: "Código leído: nombre y código guardados. Ahora fotografíe la placa, se guardará sola.", added: "Añadido: {name} ({code}). Las medidas y la celda se pueden completar después.", trash: "Desechar", confirmTrash: "¿Desechar «{name}» y eliminarlo de la base?" }
+    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить", find: "Найти похожие", none: "Похожих кусков в базе нет.", needPhoto: "Сначала сделайте фото.", took: "В распил: {name} ({code}). Записано в журнал.", noCode: "Код «{code}» в базе не найден. Заведите кусок через «+ Добавить».", noQr: "QR не прочитан. Сфотографируйте ближе, чтобы QR был в кадре целиком.", codeL: "Код с этикетки", scanIn: "Код со сканера + Enter", dup: "Такой код уже есть в базе.", newCode: "Новый код. Укажите название, ячейку и размеры, затем сделайте фото.", auto: "Штрих-код прочитан: название и код записаны. Теперь сфотографируйте слаб, он сохранится сам.", added: "Добавлено: {name} ({code}). Размеры и ячейку можно уточнить позже.", trash: "В мусор", confirmTrash: "Выбросить «{name}» и удалить из базы?", jobBtn: "К работе", brakBtn: "Брак", jobTitle: "К какой работе", jobNote: "Введите номер работы. Кусок уйдёт из остатков в эту работу. Если не влез — добавьте ещё кусок с тем же номером.", jobLabel: "Номер работы", jobErr: "Введите номер работы.", brakTitle: "Причина брака", brakNote: "Кусок уйдёт из остатков и попадёт в брак. Запись останется в журнале.", brakLabel: "Причина", r1: "Color match не прошел", r2: "Дефекты", r3: "Не влазит по размеру", jobStatus: "в работе", logCut: "Распил", logJob: "В работу", logBrak: "Брак", logTrash: "В мусор" },
+    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer", find: "Chercher similaires", none: "Aucune pièce semblable dans la base.", needPhoto: "Prenez d’abord une photo.", took: "En découpe : {name} ({code}). Noté dans le journal.", noCode: "Code « {code} » introuvable. Ajoutez la pièce avec « + Ajouter ».", noQr: "QR non lu. Prenez la photo plus près, le QR entier dans le cadre.", codeL: "Code de l’étiquette", scanIn: "Code du scanner + Entrée", dup: "Ce code existe déjà.", newCode: "Nouveau code. Indiquez le nom, l’emplacement et les dimensions, puis prenez la photo.", auto: "Code-barres lu : nom et code enregistrés. Photographiez maintenant la plaque, elle sera enregistrée automatiquement.", added: "Ajouté : {name} ({code}). Dimensions et emplacement à préciser plus tard.", trash: "Jeter", confirmTrash: "Jeter « {name} » et le supprimer de la base ?", jobBtn: "Au travail", brakBtn: "Rebut", jobTitle: "Pour quel travail", jobNote: "Saisissez le numéro du travail. La pièce quittera le stock. Si elle ne rentre pas, ajoutez une autre pièce avec le même numéro.", jobLabel: "Numéro du travail", jobErr: "Saisissez le numéro du travail.", brakTitle: "Motif du rebut", brakNote: "La pièce quittera le stock et ira au rebut. L’entrée reste dans le journal.", brakLabel: "Motif", r1: "Color match non conforme", r2: "Défauts", r3: "Ne rentre pas (dimensions)", jobStatus: "en travail", logCut: "Découpe", logJob: "Au travail", logBrak: "Rebut", logTrash: "Jeté" },
+    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save", find: "Find similar", none: "No similar pieces in the base.", needPhoto: "Take a photo first.", took: "Sent to cutting: {name} ({code}). Logged.", noCode: "Code “{code}” not found. Add the piece with “+ Add”.", noQr: "QR not read. Take the photo closer, with the whole QR in frame.", codeL: "Label code", scanIn: "Scanner code + Enter", dup: "This code is already in the base.", newCode: "New code. Enter the name, cell and size, then take the photo.", auto: "Barcode read: name and code saved. Now photograph the slab, it will be saved automatically.", added: "Added: {name} ({code}). Size and cell can be filled in later.", trash: "Discard", confirmTrash: "Discard “{name}” and delete it from the base?", jobBtn: "To job", brakBtn: "Reject", jobTitle: "Which job", jobNote: "Enter the job number. The piece leaves the stock and goes to this job. If it does not fit, add another piece with the same number.", jobLabel: "Job number", jobErr: "Enter the job number.", brakTitle: "Reason for rejection", brakNote: "The piece leaves the stock and is marked as rejected. The entry stays in the log.", brakLabel: "Reason", r1: "Color match failed", r2: "Defects", r3: "Does not fit (size)", jobStatus: "in job", logCut: "Cutting", logJob: "To job", logBrak: "Rejected", logTrash: "Discarded" },
+    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar", find: "Buscar similares", none: "No hay piezas parecidas en la base.", needPhoto: "Primero haga una foto.", took: "En corte: {name} ({code}). Anotado en el diario.", noCode: "Código «{code}» no encontrado. Añada la pieza con « + Añadir ».", noQr: "No se leyó el QR. Haga la foto más cerca, con todo el QR en el encuadre.", codeL: "Código de la etiqueta", scanIn: "Código del escáner + Enter", dup: "Este código ya está en la base.", newCode: "Código nuevo. Indique el nombre, la celda y las medidas, y luego haga la foto.", auto: "Código leído: nombre y código guardados. Ahora fotografíe la placa, se guardará sola.", added: "Añadido: {name} ({code}). Las medidas y la celda se pueden completar después.", trash: "Desechar", confirmTrash: "¿Desechar «{name}» y eliminarlo de la base?", jobBtn: "A trabajo", brakBtn: "Desecho", jobTitle: "¿A qué trabajo?", jobNote: "Introduzca el número de trabajo. La pieza sale del stock y va a ese trabajo. Si no cabe, añada otra pieza con el mismo número.", jobLabel: "Número de trabajo", jobErr: "Introduzca el número de trabajo.", brakTitle: "Motivo del desecho", brakNote: "La pieza sale del stock y queda como desecho. El registro se mantiene en el diario.", brakLabel: "Motivo", r1: "No pasó el color match", r2: "Defectos", r3: "No cabe (medidas)", jobStatus: "en trabajo", logCut: "Corte", logJob: "A trabajo", logBrak: "Desecho", logTrash: "Desechado" }
   };
   var itemForm = document.getElementById("itemForm");
   var iName = document.getElementById("iName"), iKind = document.getElementById("iKind");
@@ -1317,7 +1414,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   VIEWS.es = ES_VIEWS;
 
   // Образцы из таблиц убраны: приход и журнал заполняются только работниками
-  [1, 2].forEach(function (i) {
+  [1, 2, 3].forEach(function (i) {
     ["ru", "fr", "en", "es"].forEach(function (l) { if (VIEWS[l] && VIEWS[l][i]) VIEWS[l][i].rows = []; });
   });
   renderStatic();
