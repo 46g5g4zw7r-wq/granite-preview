@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калибровочный маркер</title>
+<style>
+  :root { --ink:#1d1a16; --gold:#b38d4f; --bg:#f6f1e7; }
+  body { margin:0; font-family: system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+  .wrap { max-width:720px; margin:0 auto; padding:24px 18px 40px; }
+  .langs { display:flex; gap:6px; margin-bottom:18px; }
+  .langs button { padding:6px 12px; border:1px solid var(--gold); background:#fff; border-radius:999px; cursor:pointer; }
+  .langs button[aria-pressed="true"] { background:var(--gold); color:#fff; }
+  h1 { font-size:1.4rem; margin:0 0 8px; }
+  ol { line-height:1.5; padding-left:20px; }
+  .card { background:#fff; border:1px solid #e3d9c4; border-radius:14px; padding:18px; margin:16px 0; }
+  .marker-box { width:100mm; max-width:100%; aspect-ratio:1/1; margin:0 auto; background:#fff; }
+  .marker-box img { width:100%; height:100%; image-rendering:pixelated; display:block; }
+  .btn { padding:12px 18px; border:0; border-radius:10px; background:var(--gold); color:#fff; font-size:1rem; cursor:pointer; }
+  .note { font-size:.9rem; color:#6b5f4c; }
+  @media print {
+    .langs, .btn, .intro, .steps, .note-screen { display:none !important; }
+    body, .wrap, .card { background:#fff; border:0; padding:0; margin:0; }
+    @page { size: A4; margin: 20mm; }
+    .marker-box { width:100mm; height:100mm; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="langs" id="langs">
+    <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+    <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    <button type="button" data-lang="es" aria-pressed="false">ES</button>
+  </nav>
+
+  <h1 id="title"></h1>
+  <ol class="steps" id="steps"></ol>
+
+  <div class="card">
+    <div class="marker-box"><img alt="ArUco" src="data:image/png;base64,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"></div>
+    <p class="note" id="scale"></p>
+  </div>
+
+  <button type="button" class="btn" id="printBtn"></button>
+  <p class="note note-screen" id="foot"></p>
+</div>
+<script>
+(function () {
+  var T = {
+    ru: { title: "Калибровочный маркер", steps: [
+      "Распечатай на A4 в масштабе 100%: в настройках печати выбери «Реальный размер», а не «По размеру страницы».",
+      "Проверь линейкой чёрный квадрат: он должен быть ровно 100 × 100 мм. Если нет, не используй этот лист.",
+      "Наклей маркер на жёсткий картон или пенопласт, чтобы не было складок.",
+      "Положи маркер рядом с куском, в одной плоскости, не закрывая край куска.",
+      "Снимай строго сверху, без бликов и пыли на маркере."],
+      scale: "Чёрный квадрат должен быть 100 × 100 мм.", print: "Напечатать", foot: "Печатается только маркер. Кнопки и подсказки на бумаге не будут." },
+    fr: { title: "Marqueur de calibrage", steps: [
+      "Imprimez sur A4 à l’échelle 100 % : choisissez « Taille réelle », et non « Ajuster à la page ».",
+      "Vérifiez à la règle que le carré noir fait exactement 100 × 100 mm. Sinon, n’utilisez pas cette feuille.",
+      "Collez le marqueur sur du carton rigide ou de la mousse, sans plis.",
+      "Placez le marqueur à côté de la pièce, dans le même plan, sans recouvrir le bord de la pièce.",
+      "Photographiez strictement de dessus, sans reflets ni poussière sur le marqueur."],
+      scale: "Le carré noir doit faire 100 × 100 mm.", print: "Imprimer", foot: "Seul le marqueur sera imprimé." },
+    en: { title: "Calibration marker", steps: [
+      "Print on A4 at 100% scale: choose “Actual size”, not “Fit to page”.",
+      "Check the black square with a ruler: it must be exactly 100 × 100 mm. If not, don’t use this sheet.",
+      "Glue the marker to stiff cardboard or foam so it has no creases.",
+      "Place the marker next to the piece, on the same plane, without covering the edge of the piece.",
+      "Shoot straight from above, with no glare or dust on the marker."],
+      scale: "The black square must be 100 × 100 mm.", print: "Print", foot: "Only the marker will be printed." },
+    es: { title: "Marcador de calibración", steps: [
+      "Imprima en A4 al 100 %: elija «Tamaño real», no «Ajustar a la página».",
+      "Compruebe con una regla que el cuadrado negro mide exactamente 100 × 100 mm. Si no, no use esta hoja.",
+      "Pegue el marcador en cartón rígido o espuma, sin arrugas.",
+      "Coloque el marcador junto a la pieza, en el mismo plano, sin tapar el borde de la pieza.",
+      "Fotografíe estrictamente desde arriba, sin reflejos ni polvo en el marcador."],
+      scale: "El cuadrado negro debe medir 100 × 100 mm.", print: "Imprimir", foot: "Solo se imprimirá el marcador." }
+  };
+  var lang = "ru";
+  try { var s = localStorage.getItem("granite.lang"); if (T[s]) lang = s; } catch (e) {}
+  function render() {
+    var t = T[lang];
+    document.documentElement.lang = lang;
+    document.getElementById("title").textContent = t.title;
+    var ol = document.getElementById("steps"); ol.innerHTML = "";
+    t.steps.forEach(function (s) { var li = document.createElement("li"); li.textContent = s; ol.appendChild(li); });
+    document.getElementById("scale").textContent = t.scale;
+    document.getElementById("printBtn").textContent = t.print;
+    document.getElementById("foot").textContent = t.foot;
+    Array.prototype.forEach.call(document.querySelectorAll("#langs button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang));
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#langs button"), function (b) {
+    b.addEventListener("click", function () {
+      lang = b.getAttribute("data-lang");
+      try { localStorage.setItem("granite.lang", lang); } catch (e) {}
+      render();
+    });
+  });
+  document.getElementById("printBtn").addEventListener("click", function () { window.print(); });
+  render();
+})();
+</script>
+</body>
+</html>

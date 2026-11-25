@@ -193,6 +193,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   <section class="measure" id="measure" hidden>
     <h3 id="mTitle"></h3>
     <p class="mnote" id="mNote"></p>
+    <p class="mnote"><a href="print.html" id="printLink" target="_blank" rel="noopener"></a></p>
     <label><span id="mWl"></span><input id="mW" type="number" min="1" step="1" inputmode="numeric"></label>
     <label><span id="mHl"></span><input id="mH" type="number" min="1" step="1" inputmode="numeric"></label>
     <p class="merr" id="mErr" role="alert"></p>
@@ -286,10 +287,10 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   var photoGal = document.getElementById("photoGal");
 
   var UI = {
-    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать QR", cam: "Камера", gal: "Галерея", measure: "Измерить", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык" },
-    fr: { search: "Recherche par nom ou cellule", scan: "Scanner QR", cam: "Appareil photo", gal: "Galerie", measure: "Mesurer", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue" },
-    en: { search: "Search by name or cell", scan: "Scan QR", cam: "Camera", gal: "Gallery", measure: "Measure", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language" },
-    es: { search: "Buscar por nombre o celda", scan: "Escanear QR", cam: "Cámara", gal: "Galería", measure: "Medir", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma" }
+    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать QR", cam: "Камера", gal: "Галерея", measure: "Измерить", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
+    fr: { search: "Recherche par nom ou cellule", scan: "Scanner QR", cam: "Appareil photo", gal: "Galerie", measure: "Mesurer", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
+    en: { search: "Search by name or cell", scan: "Scan QR", cam: "Camera", gal: "Gallery", measure: "Measure", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
+    es: { search: "Buscar por nombre o celda", scan: "Escanear QR", cam: "Cámara", gal: "Galería", measure: "Medir", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
   };
 
   function renderStatic() {
@@ -309,6 +310,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     document.getElementById("themeBtn").title = U.theme;
     document.getElementById("themeBtn").setAttribute("aria-label", U.theme);
     document.querySelector(".lang").setAttribute("aria-label", U.langLbl);
+    document.getElementById("printLink").textContent = U.printLink;
     renderCompanyBox();
     var segBtns = document.querySelectorAll("#formSeg button");
     var counts = { all: ITEMS.length, slab: 0, rest: 0 };
