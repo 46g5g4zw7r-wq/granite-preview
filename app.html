@@ -169,7 +169,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 
   <section class="toolbar">
     <input class="search" id="search" type="search" placeholder="Поиск по названию или ячейке">
-    <button type="button" class="btn" id="scan">Сканировать QR</button>
+    <input class="search" id="scanIn" type="text" autocomplete="off" style="max-width:240px">
+    <button type="button" class="btn" id="scan">Сканировать код</button>
     <button type="button" class="btn" id="camBtn">Камера</button>
     <button type="button" class="btn" id="galBtn">Галерея</button>
     <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
@@ -202,6 +203,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   <section class="measure" id="itemForm" hidden>
     <h3 id="iTitle"></h3>
     <p class="mnote" id="iNote"></p>
+    <label><span id="iCodeL"></span><input id="iCode" type="text" autocomplete="off"></label>
     <label><span id="iNameL"></span><input id="iName" type="text" autocomplete="off"></label>
     <label><span id="iKindL"></span><select id="iKind"></select></label>
     <label><span id="iCellL"></span><input id="iCell" type="text" autocomplete="off" placeholder="A-01"></label>
@@ -241,8 +243,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       brand: "Склад камня", role: "Офис", logout: "Выйти",
       tabs: ["Остатки", "Приход", "Журнал", "Заказы", "Персонал", "Каталог"],
       kpi: ["Плит на складе", "Мало на складе", "Приход сегодня"],
-      search: "Поиск по названию или ячейке", scan: "Сканировать QR", add: "+ Добавить",
-      st: { ok: "в наличии", low: "мало", hold: "в резерве", work: "в работе" },
+      search: "Поиск по названию или ячейке", scan: "Сканировать код", add: "+ Добавить",
+      st: { ok: "в наличии", low: "мало", hold: "в резерве", cut: "в распиле" },
       kind: { quartz: "кварц", granite: "гранит" },
       cell: "ячейка", move: "Переместить", photo: "Фото", sample: "Пример данных для превью — не настоящий склад.",
       camera: "Камера", gallery: "Галерея", reset: "Сбросить",
@@ -252,8 +254,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       brand: "Entrepôt de pierre", role: "Bureau", logout: "Quitter",
       tabs: ["Stock", "Entrées", "Journal", "Commandes", "Personnel", "Catalogue"],
       kpi: ["Plaques en stock", "Stock faible", "Entrées aujourd’hui"],
-      search: "Rechercher par nom ou emplacement", scan: "Scanner QR", add: "+ Ajouter",
-      st: { ok: "en stock", low: "faible", hold: "réservé", work: "en cours" },
+      search: "Rechercher par nom ou emplacement", scan: "Scanner code", add: "+ Ajouter",
+      st: { ok: "en stock", low: "faible", hold: "réservé", cut: "en découpe" },
       kind: { quartz: "quartz", granite: "granit" },
       cell: "emplacement", move: "Déplacer", photo: "Photo", sample: "Exemple de données pour l’aperçu — pas un vrai stock.",
       camera: "Appareil photo", gallery: "Galerie", reset: "Réinitialiser",
@@ -263,8 +265,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       brand: "Stone Warehouse", role: "Office", logout: "Sign out",
       tabs: ["Stock", "Intake", "Journal", "Orders", "Staff", "Catalog"],
       kpi: ["Slabs in stock", "Low stock", "Intake today"],
-      search: "Search by name or cell", scan: "Scan QR", add: "+ Add",
-      st: { ok: "in stock", low: "low", hold: "reserved", work: "in work" },
+      search: "Search by name or cell", scan: "Scan code", add: "+ Add",
+      st: { ok: "in stock", low: "low", hold: "reserved", cut: "cutting" },
       kind: { quartz: "quartz", granite: "granite" },
       cell: "cell", move: "Move", photo: "Photo", sample: "Sample data for the preview — not a real warehouse.",
       camera: "Camera", gallery: "Gallery", reset: "Reset",
@@ -319,10 +321,10 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   var photoGal = document.getElementById("photoGal");
 
   var UI = {
-    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать QR", cam: "Камера", gal: "Галерея", measure: "Измерить", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
-    fr: { search: "Recherche par nom ou cellule", scan: "Scanner QR", cam: "Appareil photo", gal: "Galerie", measure: "Mesurer", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
-    en: { search: "Search by name or cell", scan: "Scan QR", cam: "Camera", gal: "Gallery", measure: "Measure", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
-    es: { search: "Buscar por nombre o celda", scan: "Escanear QR", cam: "Cámara", gal: "Galería", measure: "Medir", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
+    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать код", cam: "Камера", gal: "Галерея", measure: "Измерить", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
+    fr: { search: "Recherche par nom ou cellule", scan: "Scanner code", cam: "Appareil photo", gal: "Galerie", measure: "Mesurer", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
+    en: { search: "Search by name or cell", scan: "Scan code", cam: "Camera", gal: "Gallery", measure: "Measure", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
+    es: { search: "Buscar por nombre o celda", scan: "Escanear código", cam: "Cámara", gal: "Galería", measure: "Medir", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
   };
 
   function renderStatic() {
@@ -547,11 +549,53 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       found.hidden = false;
     });
   }
-  /* ---------- Взять кусок в работу по QR-коду ---------- */
-  function takeByQr(url) {
-    foundThumb.src = url;
+  /* ---------- Код с этикетки: сканер вводит код, или фото с телефона ---------- */
+  var scanIn = document.getElementById("scanIn");
+  scanIn.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    var c = scanIn.value.trim();
+    scanIn.value = "";
+    if (c) handleCode(c);
+  });
+  function findCode(code) {
+    var hit = null;
+    ITEMS.forEach(function (x) { if (x.code === code) hit = x; });
+    return hit;
+  }
+  // Код есть в базе: кусок уходит в распил. Кода нет: открываем форму, чтобы завести кусок
+  function handleCode(code) {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    var hit = findCode(code);
+    if (!hit) {
+      openItemForm();
+      iCode.value = code;
+      iErr.textContent = L.newCode;
+      return;
+    }
+    cutPiece(hit);
+  }
+  function cutPiece(hit) {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    hit.st = "cut";
+    hit.when = String(new Date().getHours()).padStart(2, "0") + ":" + String(new Date().getMinutes()).padStart(2, "0");
+    try { localStorage.setItem(ITEM_KEY, JSON.stringify(ADDED)); } catch (e) {}
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem("granite.pieceLog") || "[]"); } catch (e) { list = []; }
+    list.unshift({ time: new Date().toISOString(), code: hit.code, name: hit.name, action: "cut" });
+    try { localStorage.setItem("granite.pieceLog", JSON.stringify(list.slice(0, 200))); } catch (e) {}
+    foundThumb.src = hit.img || "";
+    foundText.textContent = L.took.replace("{name}", hit.name).replace("{code}", hit.code);
     found.hidden = false;
-    loadImg(url).then(function (img) {
+    renderGrid();
+  }
+  // Кнопка «Сканировать код» с телефона: фото этикетки. Штрих-код и QR читаем, если браузер умеет
+  function readCodeFromImage(img) {
+    var det = null;
+    try { if ("BarcodeDetector" in window) det = new BarcodeDetector({ formats: ["qr_code", "code_128", "ean_13", "code_39"] }); } catch (e) { det = null; }
+    var viaDetector = det ? det.detect(img).then(function (rs) { return rs[0] ? String(rs[0].rawValue).trim() : ""; }).catch(function () { return ""; }) : Promise.resolve("");
+    return viaDetector.then(function (code) {
+      if (code) return code;
       var k = Math.min(1, 1200 / Math.max(img.width, img.height));
       var c = document.createElement("canvas");
       c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
@@ -559,23 +603,18 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       g.drawImage(img, 0, 0, c.width, c.height);
       var px = g.getImageData(0, 0, c.width, c.height);
       var r = (typeof jsQR === "function") ? jsQR(px.data, c.width, c.height) : null;
-      markWork(r && r.data ? String(r.data).trim() : "");
-    }).catch(function () { markWork(""); });
+      return r && r.data ? String(r.data).trim() : "";
+    });
   }
-  function markWork(code) {
+  function takeByQr(url) {
     var L = ITEM_T[lang] || ITEM_T.ru;
-    var hit = null;
-    if (code) ITEMS.forEach(function (x) { if (x.code === code) hit = x; });
-    if (!hit) { foundText.textContent = code ? L.noCode.replace("{code}", code) : L.noQr; return; }
-    hit.st = "work";
-    hit.when = String(new Date().getHours()).padStart(2, "0") + ":" + String(new Date().getMinutes()).padStart(2, "0");
-    try { localStorage.setItem(ITEM_KEY, JSON.stringify(ADDED)); } catch (e) {}
-    var list = [];
-    try { list = JSON.parse(localStorage.getItem("granite.pieceLog") || "[]"); } catch (e) { list = []; }
-    list.unshift({ time: new Date().toISOString(), code: hit.code, name: hit.name, action: "work" });
-    try { localStorage.setItem("granite.pieceLog", JSON.stringify(list.slice(0, 200))); } catch (e) {}
-    foundText.textContent = L.took.replace("{name}", hit.name).replace("{code}", hit.code);
-    renderGrid();
+    foundThumb.src = url;
+    found.hidden = false;
+    loadImg(url).then(readCodeFromImage).then(function (code) {
+      var hit = code ? findCode(code) : null;
+      if (!hit) { foundText.textContent = code ? L.noCode.replace("{code}", code) : L.noQr; return; }
+      cutPiece(hit);
+    }).catch(function () { foundText.textContent = L.noQr; });
   }
 
   /* ---------- Измерение: заглушка первого этапа, размеры вводятся вручную ---------- */
@@ -607,8 +646,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     brand: "Almacén de piedra", role: "Oficina", logout: "Salir",
     tabs: ["Existencias", "Entradas", "Diario", "Pedidos", "Personal", "Catálogo"],
     kpi: ["Placas en almacén", "Stock bajo", "Entradas hoy"],
-    search: "Buscar por nombre o celda", scan: "Escanear QR", add: "+ Añadir",
-    st: { ok: "en stock", low: "bajo", hold: "reservado", work: "en trabajo" },
+    search: "Buscar por nombre o celda", scan: "Escanear código", add: "+ Añadir",
+    st: { ok: "en stock", low: "bajo", hold: "reservado", cut: "en corte" },
     kind: { quartz: "cuarzo", granite: "granito" },
     cell: "celda", move: "Mover", photo: "Foto",
     sample: "Datos de ejemplo para la vista previa, no es un almacén real.",
@@ -1044,10 +1083,10 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 
   /* ---------- Новый кусок (работник принимает плиту или остаток и меряет) ---------- */
   var ITEM_T = {
-    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить", find: "Найти похожие", none: "Похожих кусков в базе нет.", needPhoto: "Сначала сделайте фото.", took: "Взято в работу: {name} ({code}). Записано в журнал.", noCode: "Код «{code}» в базе не найден. Проверьте QR или введите код в поиске.", noQr: "QR не прочитан. Сфотографируйте ближе, чтобы QR был в кадре целиком." },
-    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer", find: "Chercher similaires", none: "Aucune pièce semblable dans la base.", needPhoto: "Prenez d’abord une photo.", took: "Pris en travail : {name} ({code}). Noté dans le journal.", noCode: "Code « {code} » introuvable. Vérifiez le QR ou saisissez le code dans la recherche.", noQr: "QR non lu. Prenez la photo plus près, le QR entier dans le cadre." },
-    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save", find: "Find similar", none: "No similar pieces in the base.", needPhoto: "Take a photo first.", took: "Taken to work: {name} ({code}). Logged.", noCode: "Code “{code}” not found. Check the QR or type the code in search.", noQr: "QR not read. Take the photo closer, with the whole QR in frame." },
-    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar", find: "Buscar similares", none: "No hay piezas parecidas en la base.", needPhoto: "Primero haga una foto.", took: "Pasado a trabajo: {name} ({code}). Anotado en el diario.", noCode: "Código «{code}» no encontrado. Revise el QR o escriba el código en la búsqueda.", noQr: "No se leyó el QR. Haga la foto más cerca, con todo el QR en el encuadre." }
+    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить", find: "Найти похожие", none: "Похожих кусков в базе нет.", needPhoto: "Сначала сделайте фото.", took: "В распил: {name} ({code}). Записано в журнал.", noCode: "Код «{code}» в базе не найден. Заведите кусок через «+ Добавить».", noQr: "QR не прочитан. Сфотографируйте ближе, чтобы QR был в кадре целиком.", codeL: "Код с этикетки", scanIn: "Код со сканера + Enter", dup: "Такой код уже есть в базе.", newCode: "Новый код. Укажите название, ячейку и размеры, затем сделайте фото." },
+    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer", find: "Chercher similaires", none: "Aucune pièce semblable dans la base.", needPhoto: "Prenez d’abord une photo.", took: "En découpe : {name} ({code}). Noté dans le journal.", noCode: "Code « {code} » introuvable. Ajoutez la pièce avec « + Ajouter ».", noQr: "QR non lu. Prenez la photo plus près, le QR entier dans le cadre.", codeL: "Code de l’étiquette", scanIn: "Code du scanner + Entrée", dup: "Ce code existe déjà.", newCode: "Nouveau code. Indiquez le nom, l’emplacement et les dimensions, puis prenez la photo." },
+    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save", find: "Find similar", none: "No similar pieces in the base.", needPhoto: "Take a photo first.", took: "Sent to cutting: {name} ({code}). Logged.", noCode: "Code “{code}” not found. Add the piece with “+ Add”.", noQr: "QR not read. Take the photo closer, with the whole QR in frame.", codeL: "Label code", scanIn: "Scanner code + Enter", dup: "This code is already in the base.", newCode: "New code. Enter the name, cell and size, then take the photo." },
+    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar", find: "Buscar similares", none: "No hay piezas parecidas en la base.", needPhoto: "Primero haga una foto.", took: "En corte: {name} ({code}). Anotado en el diario.", noCode: "Código «{code}» no encontrado. Añada la pieza con « + Añadir ».", noQr: "No se leyó el QR. Haga la foto más cerca, con todo el QR en el encuadre.", codeL: "Código de la etiqueta", scanIn: "Código del escáner + Enter", dup: "Este código ya está en la base.", newCode: "Código nuevo. Indique el nombre, la celda y las medidas, y luego haga la foto." }
   };
   var itemForm = document.getElementById("itemForm");
   var iName = document.getElementById("iName"), iKind = document.getElementById("iKind");
@@ -1060,6 +1099,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     document.getElementById("iTitle").textContent = L.title;
     document.getElementById("iNote").textContent = L.note;
     document.getElementById("iNameL").textContent = L.name;
+    document.getElementById("iCodeL").textContent = L.codeL;
+    document.getElementById("iCode").value = "";
     document.getElementById("iKindL").textContent = L.kind;
     document.getElementById("iCellL").textContent = L.cell;
     document.getElementById("iWL").textContent = L.w;
@@ -1160,9 +1201,12 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     var name = iName.value.trim(), cell = iCell.value.trim();
     var W = parseFloat(iW.value), H = parseFloat(iH.value);
     if (!name || !cell || !(W > 0) || !(H > 0)) { iErr.textContent = L.err; return; }
+    var codeNow = iCode.value.trim();
+    if (codeNow && ITEMS.some(function (x) { return x.code === codeNow; })) { iErr.textContent = L.dup; return; }
+    if (!codeNow) codeNow = nextCode();
     var now = new Date();
     var item = {
-      name: name, kind: iKind.value, cell: cell, code: nextCode(), st: "ok", form: iForm.value, img: pendingImg,
+      name: name, kind: iKind.value, cell: cell, code: codeNow, st: "ok", form: iForm.value, img: pendingImg,
       size: Math.round(W * 25.4) + " × " + Math.round(H * 25.4),
       when: String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
     };
@@ -1185,6 +1229,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   ADMIN.es = ES_ADMIN;
   VIEWS.es = ES_VIEWS;
 
+  scanIn.placeholder = (ITEM_T[lang] || ITEM_T.ru).scanIn;
   renderStatic();
   renderGrid();
 })();
