@@ -140,6 +140,16 @@ html[data-theme="dark"] .addform input{background:#1c1e22;color:#ece6da;border-c
 html[data-theme="dark"] .addform{border-color:#3d4047}
 @media (max-width:640px){ .kpis{grid-template-columns:1fr 1fr 1fr} .kpi b{font-size:1.4rem} .kpi span{font-size:.74rem} }
 @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none!important;transition:none!important} }
+/* Объёмные кнопки: видно, куда нажимать. Светлая и тёмная тема */
+.btn,.sm,.seg button{position:relative;border-radius:12px;background:linear-gradient(180deg,#ffffff,#e6e0d4);color:#2a2620;border:1px solid #c9c1b1;box-shadow:0 6px 0 #b9b09c,0 12px 18px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .12s ease,box-shadow .12s ease,filter .12s ease;cursor:pointer;overflow:hidden}
+.btn::after,.sm::after{content:"";position:absolute;left:8%;right:8%;top:3px;height:42%;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0));pointer-events:none}
+.btn:hover,.sm:hover,.seg button:hover{transform:translateY(-2px);box-shadow:0 8px 0 #b9b09c,0 16px 24px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.95)}
+.btn:active,.sm:active,.seg button:active{transform:translateY(4px);box-shadow:0 2px 0 #b9b09c,inset 0 2px 5px rgba(0,0,0,.18)}
+.btn.gold{background:linear-gradient(180deg,#d9b276,#a87f3a);color:#fff;border-color:#8a6a2e;box-shadow:0 6px 0 #6f5322,0 12px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn.gold:hover{box-shadow:0 8px 0 #6f5322,0 16px 24px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn.gold:active{box-shadow:0 2px 0 #6f5322,inset 0 2px 5px rgba(0,0,0,.25)}
+html[data-theme="dark"] .btn,html[data-theme="dark"] .sm,html[data-theme="dark"] .seg button{background:linear-gradient(180deg,#3d4046,#24262b);color:#ece6da;border-color:#15171a;box-shadow:0 6px 0 #101114,0 12px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12)}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
