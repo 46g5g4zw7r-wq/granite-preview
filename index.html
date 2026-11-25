@@ -704,7 +704,8 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
 
   /* Название компании, заданное в админке (тот же браузер) */
   function getCompany() {
-    try { return localStorage.getItem("granite.company") || ""; } catch (e) { return ""; }
+    var DEFAULT_CO = "Rocartz";
+    try { return localStorage.getItem("granite.company") || DEFAULT_CO; } catch (e) { return DEFAULT_CO; }
   }
   var companyEl = document.getElementById("companyTitle");
   var company = getCompany();
