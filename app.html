@@ -415,6 +415,21 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     });
   }
 
+  // Кусок выброшен: убираем из базы и пишем в журнал
+  function trashPiece(x) {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    if (!confirm(L.confirmTrash.replace("{name}", displayName(x)))) return;
+    ITEMS = ITEMS.filter(function (y) { return y !== x; });
+    ADDED = ADDED.filter(function (y) { return y !== x; });
+    if (matches) matches = matches.filter(function (y) { return y !== x; });
+    try { localStorage.setItem(ITEM_KEY, JSON.stringify(ADDED)); } catch (e) {}
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem("granite.pieceLog") || "[]"); } catch (e) { list = []; }
+    list.unshift({ time: new Date().toISOString(), code: x.code || "", name: x.name, action: "trash" });
+    try { localStorage.setItem("granite.pieceLog", JSON.stringify(list.slice(0, 200))); } catch (e) {}
+    renderGrid();
+  }
+
   function renderGrid() {
     var T = DICT[lang];
     grid.innerHTML = "";
@@ -433,9 +448,12 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
           '<h3></h3>' +
           '<p class="meta"></p>' +
           '<div class="row"><span class="badge"></span><span class="meta"></span></div>' +
-          '<div class="actions"><button type="button" class="sm mv"></button><button type="button" class="sm ph2"></button></div>' +
+          '<div class="actions"><button type="button" class="sm mv"></button><button type="button" class="sm ph2"></button><button type="button" class="sm trash"></button></div>' +
         '</div>';
       c.querySelector("h3").textContent = displayName(x);
+      var tb = c.querySelector(".trash");
+      tb.textContent = (ITEM_T[lang] || ITEM_T.ru).trash;
+      tb.addEventListener("click", function () { trashPiece(x); });
       if (x.code && window.QRCode) {
         var qbox = document.createElement("div");
         qbox.className = "qr";
@@ -1124,10 +1142,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 
   /* ---------- Новый кусок (работник принимает плиту или остаток и меряет) ---------- */
   var ITEM_T = {
-    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить", find: "Найти похожие", none: "Похожих кусков в базе нет.", needPhoto: "Сначала сделайте фото.", took: "В распил: {name} ({code}). Записано в журнал.", noCode: "Код «{code}» в базе не найден. Заведите кусок через «+ Добавить».", noQr: "QR не прочитан. Сфотографируйте ближе, чтобы QR был в кадре целиком.", codeL: "Код с этикетки", scanIn: "Код со сканера + Enter", dup: "Такой код уже есть в базе.", newCode: "Новый код. Укажите название, ячейку и размеры, затем сделайте фото.", auto: "Штрих-код прочитан: название и код записаны. Теперь сфотографируйте слаб, он сохранится сам.", added: "Добавлено: {name} ({code}). Размеры и ячейку можно уточнить позже." },
-    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer", find: "Chercher similaires", none: "Aucune pièce semblable dans la base.", needPhoto: "Prenez d’abord une photo.", took: "En découpe : {name} ({code}). Noté dans le journal.", noCode: "Code « {code} » introuvable. Ajoutez la pièce avec « + Ajouter ».", noQr: "QR non lu. Prenez la photo plus près, le QR entier dans le cadre.", codeL: "Code de l’étiquette", scanIn: "Code du scanner + Entrée", dup: "Ce code existe déjà.", newCode: "Nouveau code. Indiquez le nom, l’emplacement et les dimensions, puis prenez la photo.", auto: "Code-barres lu : nom et code enregistrés. Photographiez maintenant la plaque, elle sera enregistrée automatiquement.", added: "Ajouté : {name} ({code}). Dimensions et emplacement à préciser plus tard." },
-    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save", find: "Find similar", none: "No similar pieces in the base.", needPhoto: "Take a photo first.", took: "Sent to cutting: {name} ({code}). Logged.", noCode: "Code “{code}” not found. Add the piece with “+ Add”.", noQr: "QR not read. Take the photo closer, with the whole QR in frame.", codeL: "Label code", scanIn: "Scanner code + Enter", dup: "This code is already in the base.", newCode: "New code. Enter the name, cell and size, then take the photo.", auto: "Barcode read: name and code saved. Now photograph the slab, it will be saved automatically.", added: "Added: {name} ({code}). Size and cell can be filled in later." },
-    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar", find: "Buscar similares", none: "No hay piezas parecidas en la base.", needPhoto: "Primero haga una foto.", took: "En corte: {name} ({code}). Anotado en el diario.", noCode: "Código «{code}» no encontrado. Añada la pieza con « + Añadir ».", noQr: "No se leyó el QR. Haga la foto más cerca, con todo el QR en el encuadre.", codeL: "Código de la etiqueta", scanIn: "Código del escáner + Enter", dup: "Este código ya está en la base.", newCode: "Código nuevo. Indique el nombre, la celda y las medidas, y luego haga la foto.", auto: "Código leído: nombre y código guardados. Ahora fotografíe la placa, se guardará sola.", added: "Añadido: {name} ({code}). Las medidas y la celda se pueden completar después." }
+    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить", find: "Найти похожие", none: "Похожих кусков в базе нет.", needPhoto: "Сначала сделайте фото.", took: "В распил: {name} ({code}). Записано в журнал.", noCode: "Код «{code}» в базе не найден. Заведите кусок через «+ Добавить».", noQr: "QR не прочитан. Сфотографируйте ближе, чтобы QR был в кадре целиком.", codeL: "Код с этикетки", scanIn: "Код со сканера + Enter", dup: "Такой код уже есть в базе.", newCode: "Новый код. Укажите название, ячейку и размеры, затем сделайте фото.", auto: "Штрих-код прочитан: название и код записаны. Теперь сфотографируйте слаб, он сохранится сам.", added: "Добавлено: {name} ({code}). Размеры и ячейку можно уточнить позже.", trash: "В мусор", confirmTrash: "Выбросить «{name}» и удалить из базы?" },
+    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer", find: "Chercher similaires", none: "Aucune pièce semblable dans la base.", needPhoto: "Prenez d’abord une photo.", took: "En découpe : {name} ({code}). Noté dans le journal.", noCode: "Code « {code} » introuvable. Ajoutez la pièce avec « + Ajouter ».", noQr: "QR non lu. Prenez la photo plus près, le QR entier dans le cadre.", codeL: "Code de l’étiquette", scanIn: "Code du scanner + Entrée", dup: "Ce code existe déjà.", newCode: "Nouveau code. Indiquez le nom, l’emplacement et les dimensions, puis prenez la photo.", auto: "Code-barres lu : nom et code enregistrés. Photographiez maintenant la plaque, elle sera enregistrée automatiquement.", added: "Ajouté : {name} ({code}). Dimensions et emplacement à préciser plus tard.", trash: "Jeter", confirmTrash: "Jeter « {name} » et le supprimer de la base ?" },
+    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save", find: "Find similar", none: "No similar pieces in the base.", needPhoto: "Take a photo first.", took: "Sent to cutting: {name} ({code}). Logged.", noCode: "Code “{code}” not found. Add the piece with “+ Add”.", noQr: "QR not read. Take the photo closer, with the whole QR in frame.", codeL: "Label code", scanIn: "Scanner code + Enter", dup: "This code is already in the base.", newCode: "New code. Enter the name, cell and size, then take the photo.", auto: "Barcode read: name and code saved. Now photograph the slab, it will be saved automatically.", added: "Added: {name} ({code}). Size and cell can be filled in later.", trash: "Discard", confirmTrash: "Discard “{name}” and delete it from the base?" },
+    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar", find: "Buscar similares", none: "No hay piezas parecidas en la base.", needPhoto: "Primero haga una foto.", took: "En corte: {name} ({code}). Anotado en el diario.", noCode: "Código «{code}» no encontrado. Añada la pieza con « + Añadir ».", noQr: "No se leyó el QR. Haga la foto más cerca, con todo el QR en el encuadre.", codeL: "Código de la etiqueta", scanIn: "Código del escáner + Enter", dup: "Este código ya está en la base.", newCode: "Código nuevo. Indique el nombre, la celda y las medidas, y luego haga la foto.", auto: "Código leído: nombre y código guardados. Ahora fotografíe la placa, se guardará sola.", added: "Añadido: {name} ({code}). Las medidas y la celda se pueden completar después.", trash: "Desechar", confirmTrash: "¿Desechar «{name}» y eliminarlo de la base?" }
   };
   var itemForm = document.getElementById("itemForm");
   var iName = document.getElementById("iName"), iKind = document.getElementById("iKind");
@@ -1298,6 +1316,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   ADMIN.es = ES_ADMIN;
   VIEWS.es = ES_VIEWS;
 
+  // Образцы из таблиц убраны: приход и журнал заполняются только работниками
+  [1, 2].forEach(function (i) {
+    ["ru", "fr", "en", "es"].forEach(function (l) { if (VIEWS[l] && VIEWS[l][i]) VIEWS[l][i].rows = []; });
+  });
   renderStatic();
   renderGrid();
 })();
