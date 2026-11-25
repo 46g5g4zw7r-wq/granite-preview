@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stone Warehouse — links</title>
+<style>
+  :root { --gold:#c9a463; --gold-deep:#8e6f3a; --ink:#f3ead8; --muted:#b9ab90; }
+  html, body { height:100%; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:system-ui,sans-serif; color:var(--ink); overflow:hidden; background:#121010; }
+  .bg { position:fixed; inset:0; z-index:-3; background:
+      radial-gradient(ellipse at 20% 15%, rgba(201,164,99,.20), transparent 55%),
+      radial-gradient(ellipse at 85% 85%, rgba(201,164,99,.12), transparent 60%),
+      linear-gradient(160deg, #1a1714 0%, #0d0c0b 55%, #161311 100%); }
+  .scene { position:fixed; inset:0; z-index:-1; perspective:1100px; perspective-origin:50% 40%; pointer-events:none; overflow:hidden; }
+  .plate { position:absolute; left:50%; top:50%; width:var(--w,180px); height:var(--h,110px); margin:calc(var(--h,110px) / -2) 0 0 calc(var(--w,180px) / -2); transform-style:preserve-3d; animation: float var(--t,22s) linear infinite; animation-delay: var(--delay,0s); }
+  .plate .face { position:absolute; inset:0; border-radius:8px; overflow:hidden; backface-visibility:hidden; box-shadow: 0 14px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,240,210,.18); background-color:#2a2622; background-size:cover; background-position:center; }
+  .plate .face.back { transform: rotateY(180deg); }
+  .plate.ph-u .face { background-image:url("https://images.unsplash.com/photo-1733085097233-66441dedba94?fm=jpg&q=60&w=900&auto=format&fit=crop"); }
+  .plate.ph-p .face { background-image:url("https://images.pexels.com/photos/5506219/pexels-photo-5506219.jpeg?auto=compress&cs=tinysrgb&w=900"); }
+  @keyframes float {
+    0%   { transform: translate3d(-34vw,-18vh,-260px) rotateX(18deg) rotateY(0deg); }
+    25%  { transform: translate3d(-8vw,22vh,-120px) rotateX(-12deg) rotateY(180deg); }
+    50%  { transform: translate3d(30vw,-6vh,-340px) rotateX(10deg) rotateY(360deg); }
+    75%  { transform: translate3d(12vw,26vh,-150px) rotateX(-18deg) rotateY(540deg); }
+    100% { transform: translate3d(-34vw,-18vh,-260px) rotateX(18deg) rotateY(720deg); }
+  }
+  .p1 { --w:200px; --h:124px; --t:24s; --delay:-2s; }
+  .p2 { --w:150px; --h:96px;  --t:19s; --delay:-9s; }
+  .p3 { --w:230px; --h:140px; --t:30s; --delay:-14s; }
+  .p4 { --w:120px; --h:80px;  --t:17s; --delay:-5s; }
+  .p5 { --w:170px; --h:104px; --t:26s; --delay:-18s; }
+  .p6 { --w:130px; --h:86px;  --t:21s; --delay:-11s; }
+  .box { position:relative; z-index:2; width:min(92vw,420px); padding:28px 22px; text-align:center; background:rgba(20,18,16,.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border:1px solid rgba(201,164,99,.45); border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05); }
+  .langs { display:flex; justify-content:center; gap:6px; margin-bottom:22px; }
+  .langs button { padding:6px 12px; border:1px solid var(--gold); background:transparent; color:var(--ink); border-radius:999px; cursor:pointer; font-size:.9rem; }
+  .langs button[aria-pressed="true"] { background:var(--gold); color:#1a1714; font-weight:600; }
+  h1 { font-size:2rem; margin:0 0 6px; letter-spacing:.04em; font-weight:700; background: linear-gradient(100deg, #c9a463 20%, #fff3d6 50%, #c9a463 80%); background-size: 250% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation: shimmer 7s ease-in-out infinite; }
+  @keyframes shimmer { 0%,100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+  p { color:var(--muted); margin:0 0 22px; }
+  a.btn { display:block; margin:12px 0; padding:17px; border-radius:12px; text-decoration:none; font-size:1.05rem; font-weight:600; color:#1a1714; background:linear-gradient(180deg,#dcb878,var(--gold)); box-shadow:0 4px 18px rgba(201,164,99,.25); transition: transform .15s ease, box-shadow .15s ease; }
+  a.btn:hover { transform: translateY(-2px); box-shadow:0 8px 24px rgba(201,164,99,.35); }
+  a.btn:active { transform: translateY(1px); }
+  a.btn.alt { background:transparent; color:var(--ink); border:1px solid rgba(201,164,99,.6); box-shadow:none; }
+  a.btn.light { background:transparent; color:var(--gold); border:1px solid rgba(201,164,99,.35); box-shadow:none; }
+  small { display:block; margin-top:18px; color:#8c7f66; }
+  .credit { margin-top:10px; font-size:.75rem; }
+  @media (prefers-reduced-motion: reduce) { .plate, h1 { animation:none; } .plate { transform: translate3d(0,0,-200px) rotateX(10deg) rotateY(20deg); } a.btn { transition:none; } }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<div class="scene" aria-hidden="true">
+  <div class="plate p1 ph-u"><div class="face"></div><div class="face back"></div></div>
+  <div class="plate p2 ph-p"><div class="face"></div><div class="face back"></div></div>
+  <div class="plate p3 ph-u"><div class="face"></div><div class="face back"></div></div>
+  <div class="plate p4 ph-p"><div class="face"></div><div class="face back"></div></div>
+  <div class="plate p5 ph-u"><div class="face"></div><div class="face back"></div></div>
+  <div class="plate p6 ph-p"><div class="face"></div><div class="face back"></div></div>
+</div>
+<div class="box">
+  <nav class="langs" id="langs">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+    <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+    <button type="button" data-lang="es" aria-pressed="false">ES</button>
+  </nav>
+  <h1 id="title"></h1>
+  <p id="sub"></p>
+  <a class="btn" id="openSite" href="index.html"></a>
+  <a class="btn alt" id="worker" href="worker.html"></a>
+  <a class="btn light" id="print" href="print.html"></a>
+  <small id="foot"></small>
+  <small class="credit">Photos: Akbar Nemati (Unsplash), Olga V (Pexels)</small>
+</div>
+<script>
+(function () {
+  var T = {
+    en: { title: "Stone Warehouse", sub: "Granite and Quartz Inventory", open: "Open the app", worker: "Worker check-in", print: "Print the marker", foot: "Links open without signing in. Stone photos are not uploaded yet." },
+    ru: { title: "Склад камня", sub: "Учёт гранита и кварца", open: "Открыть сайт", worker: "Вход для работника", print: "Распечатать маркер", foot: "Ссылки открываются без входа в аккаунт. Фото плит пока не загружены." },
+    fr: { title: "Entrepôt de pierre", sub: "Inventaire granit et quartz", open: "Ouvrir l’application", worker: "Pointage employé", print: "Imprimer le marqueur", foot: "Les liens s’ouvrent sans connexion. Les photos des plaques ne sont pas encore ajoutées." },
+    es: { title: "Almacén de piedra", sub: "Inventario de granito y cuarzo", open: "Abrir la aplicación", worker: "Registro de trabajador", print: "Imprimir el marcador", foot: "Los enlaces se abren sin iniciar sesión. Las fotos de las piezas aún no están subidas." }
+  };
+  var lang = "en";
+  function render() {
+    var t = T[lang];
+    document.documentElement.lang = lang;
+    document.getElementById("title").textContent = t.title;
+    document.getElementById("sub").textContent = t.sub;
+    document.getElementById("openSite").textContent = t.open;
+    document.getElementById("worker").textContent = t.worker;
+    document.getElementById("print").textContent = t.print;
+    document.getElementById("foot").textContent = t.foot;
+    Array.prototype.forEach.call(document.querySelectorAll("#langs button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang));
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#langs button"), function (b) {
+    b.addEventListener("click", function () { lang = b.getAttribute("data-lang"); render(); });
+  });
+  render();
+})();
+</script>
+</body>
+</html>
