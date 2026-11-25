@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Склад камня — остатки</title>
+<style>
+:root{
+  --granite-900:#1b1c1f;--granite-800:#232528;--granite-700:#34363b;
+  --quartz-50:#fbf9f5;--quartz-100:#f5f1ea;--quartz-300:#d8cfc0;
+  --gold:#8a6a2e;--gold-deep:#7a5b22;--gold-light:#b38d4f;--line:#e4dfd6;--ink:#161a20;--ink-soft:#4b5361;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--quartz-100);color:var(--ink)}
+h1,h2,h3{font-family:Manrope,Inter,system-ui,sans-serif;font-weight:750;letter-spacing:-.01em;color:var(--granite-800);margin:0}
+
+/* Шапка */
+.top{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;background:linear-gradient(180deg,var(--granite-700),var(--granite-800));color:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+.brand{font-family:Manrope,Inter,sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:.03em;display:flex;align-items:center;gap:10px}
+.brand i{display:inline-block;width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#f5f1ea,#b38d4f 60%,#7a5b22)}
+.role{font-size:.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(179,141,79,.25);color:#f3e3bd;border:1px solid rgba(179,141,79,.5)}
+.right{display:flex;align-items:center;gap:10px}
+.lang{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:999px;padding:3px}
+.lang button{font:inherit;font-size:.78rem;font-weight:700;color:#d8d2c4;background:transparent;border:0;border-radius:999px;padding:6px 10px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-light),var(--gold));color:#fff}
+.logout{font:inherit;font-size:.85rem;color:#d8d2c4;text-decoration:none;padding:6px 10px;border-radius:10px}
+.logout:hover{background:rgba(255,255,255,.08);color:#fff}
+
+/* Вкладки */
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:10px 18px 0;background:var(--granite-800)}
+.tab{font:inherit;font-weight:600;color:#c9cdd4;background:transparent;border:0;padding:10px 14px;border-radius:12px 12px 0 0;cursor:pointer;white-space:nowrap}
+.tab:hover{color:#fff;background:rgba(255,255,255,.06)}
+.tab[aria-selected="true"]{color:#fff;background:var(--quartz-100);box-shadow:inset 0 -3px 0 var(--gold-light)}
+
+main{padding:20px 18px 40px;max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+/* Показатели */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi{background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgba(21,24,29,.06),0 6px 18px rgba(21,24,29,.06)}
+.kpi b{display:block;font-family:Manrope,Inter,sans-serif;font-size:1.9rem;font-weight:800;color:var(--granite-800)}
+.kpi span{font-size:.85rem;color:var(--ink-soft)}
+.kpi.warn b{color:#8a4b0e}
+
+/* Панель поиска */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search{flex:1;min-width:220px;font:inherit;font-size:1rem;padding:12px 14px;border:1px solid #cfc8bb;border-radius:12px;background:#fff;outline:none}
+.search:focus{border-color:var(--gold-light);box-shadow:0 0 0 3px rgba(179,141,79,.22)}
+.btn{font:inherit;font-weight:600;padding:12px 16px;border-radius:12px;border:1px solid #cfc8bb;background:#fff;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--quartz-100)}
+.btn.gold{background:linear-gradient(180deg,var(--gold-light),var(--gold));color:#fff;border-color:var(--gold-deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.btn.gold:hover{filter:brightness(1.06)}
+
+/* Сетка остатков */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;perspective:1000px}
+.card{position:relative;background:var(--quartz-50);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(21,24,29,.06),0 10px 24px rgba(21,24,29,.1);transform-style:preserve-3d;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease,box-shadow .25s ease;animation:cardIn .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0ms)}
+.card:hover{box-shadow:0 2px 4px rgba(21,24,29,.08),0 22px 40px rgba(21,24,29,.22)}
+@keyframes cardIn{from{opacity:0;transform:perspective(900px) rotateX(-60deg) translateY(30px)}to{opacity:1;transform:perspective(900px) rotateX(0) translateY(0)}}
+.ph{position:relative;height:150px;background-size:cover;background-position:center}
+.ph::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);transform:translateX(-120%);animation:sheen 4.8s ease-in-out infinite;animation-delay:var(--d,0ms)}
+@keyframes sheen{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.body h3{font-size:1.02rem}
+.meta{margin:0;font-size:.82rem;color:var(--ink-soft)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.76rem;font-weight:700}
+.st-ok{background:#dcefe5;color:#1f6b4a}
+.st-low{background:#f7e3c4;color:#7a4b0e}
+.st-hold{background:var(--quartz-300);color:var(--granite-800)}
+.actions{display:flex;gap:6px}
+.sm{font:inherit;font-size:.8rem;font-weight:600;padding:6px 10px;border-radius:9px;border:1px solid #cfc8bb;background:#fff;color:var(--ink);cursor:pointer}
+.sm:hover{background:var(--quartz-100)}
+.sample{font-size:.8rem;color:var(--ink-soft);margin:0}
+
+.found{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.found[hidden]{display:none}
+.found img{width:72px;height:72px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.found p{margin:0;flex:1;font-weight:600;color:var(--granite-800);min-width:180px}
+.measure{background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:10px;max-width:460px}
+.measure[hidden]{display:none}
+.measure h3{font-size:1.1rem}
+.measure label{display:grid;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink-soft)}
+.measure input{font:inherit;font-size:1rem;padding:10px 12px;border:1px solid #cfc8bb;border-radius:10px;background:#fff}
+.mnote{margin:0;font-size:.85rem;color:var(--ink-soft)}
+.merr{margin:0;min-height:1.2em;font-size:.85rem;color:#9a3b1e}
+.mbtns{display:flex;justify-content:flex-end;gap:8px}
+.theme{font:inherit;font-size:1.05rem;line-height:1;color:#e7dcc6;background:transparent;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 10px;cursor:pointer}
+.theme:hover{background:rgba(255,255,255,.08)}
+
+/* Тёмная тема: переопределяем цвета на уровне html[data-theme="dark"] */
+html[data-theme="dark"]{--quartz-50:#202226;--quartz-100:#15171a;--quartz-300:#3a3c42;--line:#34363b;--ink:#ece6da;--ink-soft:#b3b8c2;color-scheme:dark}
+html[data-theme="dark"] body{background:#15171a;color:#ece6da}
+html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3{color:#f3eee3}
+html[data-theme="dark"] .tab[aria-selected="true"]{background:#15171a;color:#fff}
+html[data-theme="dark"] .kpi b{color:#e6c98f}
+html[data-theme="dark"] .kpi.warn b{color:#f0a860}
+html[data-theme="dark"] .search,html[data-theme="dark"] .measure input{background:#1c1e22;color:#ece6da;border-color:#3d4047}
+html[data-theme="dark"] .btn,html[data-theme="dark"] .sm{background:#24262b;color:#ece6da;border-color:#3d4047}
+html[data-theme="dark"] .btn:hover,html[data-theme="dark"] .sm:hover{background:#2c2f35}
+html[data-theme="dark"] .btn.gold{color:#fff}
+html[data-theme="dark"] .st-ok{background:#1d3a2c;color:#8fd5b0}
+html[data-theme="dark"] .st-low{background:#4a3416;color:#f2c98a}
+html[data-theme="dark"] .st-hold{background:#3a3c42;color:#e6e0d4}
+html[data-theme="dark"] .found p{color:#f3eee3}
+html[data-theme="dark"] .merr{color:#f0a98f}
+html[data-theme="dark"] .card,html[data-theme="dark"] .kpi,html[data-theme="dark"] .found,html[data-theme="dark"] .measure{background:var(--quartz-50);border-color:var(--line)}
+
+.off{display:none!important}
+.view{display:flex;flex-direction:column;gap:14px}
+.view-title{font-family:Manrope,Inter,sans-serif;font-size:1.25rem;font-weight:800;color:var(--granite-800);margin:0}
+.tbl{background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(21,24,29,.06),0 6px 18px rgba(21,24,29,.06)}
+.tbl-row{display:grid;gap:12px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+.tbl-row:first-child{border-top:0}
+.tbl-row.head{background:var(--quartz-100);font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+.tbl-row span{font-size:.92rem;min-width:0;overflow-wrap:anywhere}
+html[data-theme="dark"] .tbl-row.head{background:#1c1e22}
+@media (max-width:640px){ .tbl-row{font-size:.85rem;padding:10px 12px} }
+button.role{font:inherit;cursor:pointer}
+.seg{display:inline-flex;gap:4px;align-self:flex-start;flex-wrap:wrap;background:var(--quartz-100);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{font:inherit;font-weight:600;font-size:.9rem;color:var(--ink-soft);background:transparent;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-light),var(--gold));color:#fff}
+html[data-theme="dark"] .seg{background:#1c1e22}
+.rhint{font-size:.78rem;color:#d8d2c4;font-weight:500}
+.companybox{display:grid;gap:8px;background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.companybox[hidden]{display:none}
+.companybox .addform{border-style:solid;padding:10px}
+.measure label[hidden]{display:none}
+.adminnote{margin:0;font-size:.85rem;font-weight:600;color:#7a4b0e;background:#f7e3c4;border-radius:12px;padding:10px 14px}
+html[data-theme="dark"] .adminnote{background:#4a3416;color:#f2c98a}
+.addform{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr)) auto;gap:8px;align-items:center;background:var(--quartz-50);border:1px dashed #cfc8bb;border-radius:16px;padding:12px}
+.addform input{font:inherit;font-size:.92rem;padding:10px 12px;border:1px solid #cfc8bb;border-radius:10px;background:#fff;color:var(--ink);min-width:0}
+html[data-theme="dark"] .addform input{background:#1c1e22;color:#ece6da;border-color:#3d4047}
+html[data-theme="dark"] .addform{border-color:#3d4047}
+@media (max-width:640px){ .kpis{grid-template-columns:1fr 1fr 1fr} .kpi b{font-size:1.4rem} .kpi span{font-size:.74rem} }
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><i></i><span id="brand">Склад камня</span><button type="button" class="role" id="role" title="Переключить роль (превью)">Офис</button>
+    <span class="rhint" id="roleHint"></span></div>
+  <div class="right">
+    <nav class="lang" aria-label="Язык">
+      <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+      <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      <button type="button" data-lang="es" aria-pressed="false">ES</button>
+    </nav>
+    <button type="button" class="theme" id="themeBtn" aria-label="Тема" title="Тема"></button>
+    <a class="logout" href="index.html" id="logout">Выйти</a>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs"></nav>
+
+<main>
+  <section class="companybox" id="companyBox" hidden></section>
+  <section class="kpis" id="kpis"></section>
+
+  <section class="toolbar">
+    <input class="search" id="search" type="search" placeholder="Поиск по названию или ячейке">
+    <button type="button" class="btn" id="scan">Сканировать QR</button>
+    <button type="button" class="btn" id="camBtn">Камера</button>
+    <button type="button" class="btn" id="galBtn">Галерея</button>
+    <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
+    <input type="file" id="photoGal" accept="image/*" hidden>
+    <button type="button" class="btn" id="measureBtn">Измерить</button>
+    <button type="button" class="btn gold" id="add">+ Добавить</button>
+  </section>
+
+  <nav class="seg" id="formSeg" aria-label="Тип">
+    <button type="button" data-form="all" aria-pressed="true">Все</button>
+    <button type="button" data-form="slab" aria-pressed="false">Целые плиты</button>
+    <button type="button" data-form="rest" aria-pressed="false">Остатки</button>
+  </nav>
+  <section class="found" id="found" hidden>
+    <img id="foundThumb" alt="">
+    <p id="foundText"></p>
+    <button type="button" class="btn" id="foundReset">Сбросить</button>
+  </section>
+  <section class="measure gate" id="gate" hidden>
+    <h3 id="gTitle"></h3>
+    <p class="mnote" id="gNote"></p>
+    <label><span id="gPwl"></span><input id="gPw" type="password" autocomplete="new-password"></label>
+    <label id="gPw2wrap" hidden><span id="gPw2l"></span><input id="gPw2" type="password" autocomplete="new-password"></label>
+    <p class="merr" id="gErr" role="alert"></p>
+    <div class="mbtns">
+      <button type="button" class="btn" id="gCancel"></button>
+      <button type="button" class="btn gold" id="gOk"></button>
+    </div>
+  </section>
+  <section class="measure" id="measure" hidden>
+    <h3 id="mTitle"></h3>
+    <p class="mnote" id="mNote"></p>
+    <label><span id="mWl"></span><input id="mW" type="number" min="1" step="1" inputmode="numeric"></label>
+    <label><span id="mHl"></span><input id="mH" type="number" min="1" step="1" inputmode="numeric"></label>
+    <p class="merr" id="mErr" role="alert"></p>
+    <div class="mbtns">
+      <button type="button" class="btn" id="mCancel"></button>
+      <button type="button" class="btn gold" id="mOk"></button>
+    </div>
+  </section>
+  <section class="grid" id="grid" aria-live="polite"></section>
+  <p class="sample" id="sample"></p>
+  <section class="view off" id="view" aria-live="polite"></section>
+</main>
+
+<script>
+(function () {
+  var DICT = {
+    ru: {
+      brand: "Склад камня", role: "Офис", logout: "Выйти",
+      tabs: ["Остатки", "Приход", "Журнал", "Заказы", "Персонал", "Каталог"],
+      kpi: ["Плит на складе", "Мало на складе", "Приход сегодня"],
+      search: "Поиск по названию или ячейке", scan: "Сканировать QR", add: "+ Добавить",
+      st: { ok: "в наличии", low: "мало", hold: "в резерве" },
+      kind: { quartz: "кварц", granite: "гранит" },
+      cell: "ячейка", move: "Переместить", photo: "Фото", sample: "Пример данных для превью — не настоящий склад.",
+      camera: "Камера", gallery: "Галерея", reset: "Сбросить",
+      measure: "Измерить", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (мм).", mW: "Ширина, мм", mH: "Высота, мм", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
+    },
+    fr: {
+      brand: "Entrepôt de pierre", role: "Bureau", logout: "Quitter",
+      tabs: ["Stock", "Entrées", "Journal", "Commandes", "Personnel", "Catalogue"],
+      kpi: ["Plaques en stock", "Stock faible", "Entrées aujourd’hui"],
+      search: "Rechercher par nom ou emplacement", scan: "Scanner QR", add: "+ Ajouter",
+      st: { ok: "en stock", low: "faible", hold: "réservé" },
+      kind: { quartz: "quartz", granite: "granit" },
+      cell: "emplacement", move: "Déplacer", photo: "Photo", sample: "Exemple de données pour l’aperçu — pas un vrai stock.",
+      camera: "Appareil photo", gallery: "Galerie", reset: "Réinitialiser",
+      measure: "Mesurer", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (mm).", mW: "Largeur, mm", mH: "Hauteur, mm", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
+    },
+    en: {
+      brand: "Stone Warehouse", role: "Office", logout: "Sign out",
+      tabs: ["Stock", "Intake", "Journal", "Orders", "Staff", "Catalog"],
+      kpi: ["Slabs in stock", "Low stock", "Intake today"],
+      search: "Search by name or cell", scan: "Scan QR", add: "+ Add",
+      st: { ok: "in stock", low: "low", hold: "reserved" },
+      kind: { quartz: "quartz", granite: "granite" },
+      cell: "cell", move: "Move", photo: "Photo", sample: "Sample data for the preview — not a real warehouse.",
+      camera: "Camera", gallery: "Gallery", reset: "Reset",
+      measure: "Measure", mTitle: "Remnant size", mNote: "Manual entry for now. In the second stage the app will find the ArUco marker in the photo and calculate the size (mm).", mW: "Width, mm", mH: "Height, mm", mOk: "Confirm", mCancel: "Cancel", mBad: "Enter sizes greater than zero.", mSaved: "Preview: sizes are not saved to the database.", foundTitle: "Similar by colour and veining (rough comparison)", photoErr: "Could not read the photo"
+    }
+  };
+
+  var ITEMS = [
+    { name: "Горная волна",          kind: "quartz",  size: "2400 × 1200", cell: "A-01", st: "ok",   img: "img/s1.jpg", when: "10:14" },
+    { name: "Calacatta Borghini Gold", kind: "quartz", size: "2400 × 1100", cell: "A-02", st: "ok",   img: "img/s2.jpg", when: "09:40" },
+    { name: "Scandi Black",          kind: "quartz",  size: "1800 × 600",  cell: "B-04", st: "low",  img: "img/s3.jpg", when: "вчера" },
+    { name: "Madawaska",             kind: "quartz",  size: "2400 × 1200", cell: "B-07", st: "ok",   img: "img/s4.jpg", when: "08:55" },
+    { name: "Nero Marquina",         kind: "granite", size: "2100 × 900",  cell: "C-02", st: "hold", img: "img/s5.jpg", when: "11:20" },
+    { name: "Paragon",               kind: "quartz",  size: "2400 × 1200", cell: "C-05", st: "ok",   img: "img/s6.jpg", when: "вчера" },
+    { name: "Arctic Noir",           kind: "quartz",  size: "1500 × 900",  cell: "D-01", st: "low",  img: "img/s7.jpg", when: "12:05" },
+    { name: "White Panda",           kind: "quartz",  size: "2400 × 1200", cell: "D-03", st: "ok",   img: "img/s8.jpg", when: "07:30" }
+  ];
+
+  // Переводы названий позиций. Если перевода нет, показывается исходное название.
+  var NAMES = {
+    fr: { "Горная волна": "Vague de montagne" },
+    en: { "Горная волна": "Mountain Wave" },
+    es: { "Горная волна": "Ola de montaña" }
+  };
+  function displayName(x) {
+    var t = NAMES[lang];
+    return (t && t[x.name]) || x.name;
+  }
+
+  var lang = "ru";
+  try { var saved = localStorage.getItem("granite.lang"); if (DICT[saved]) lang = saved; } catch (e) {}
+  var grid = document.getElementById("grid");
+  var search = document.getElementById("search");
+  var query = "";
+  var matches = null;
+  var currentTab = 0;
+  var admin = false;
+  var scanMode = false;
+  var formFilter = "all";
+  // Пример: какие позиции в превью — остатки. В приложении признак задаётся при приходе.
+  var REST = { "Scandi Black": 1, "Arctic Noir": 1 };
+  function formOf(x) { return REST[x.name] ? "rest" : "slab"; }
+  var found = document.getElementById("found");
+  var foundThumb = document.getElementById("foundThumb");
+  var foundText = document.getElementById("foundText");
+  var photoCam = document.getElementById("photoCam");
+  var photoGal = document.getElementById("photoGal");
+
+  var UI = {
+    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать QR", cam: "Камера", gal: "Галерея", measure: "Измерить", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык" },
+    fr: { search: "Recherche par nom ou cellule", scan: "Scanner QR", cam: "Appareil photo", gal: "Galerie", measure: "Mesurer", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue" },
+    en: { search: "Search by name or cell", scan: "Scan QR", cam: "Camera", gal: "Gallery", measure: "Measure", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language" },
+    es: { search: "Buscar por nombre o celda", scan: "Escanear QR", cam: "Cámara", gal: "Galería", measure: "Medir", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma" }
+  };
+
+  function renderStatic() {
+    var T = DICT[lang];
+    var U = UI[lang];
+    document.documentElement.lang = lang;
+    document.getElementById("brand").textContent = T.brand;
+    document.getElementById("role").textContent = ROLES[lang][admin ? "admin" : "staff"];
+    document.getElementById("roleHint").textContent = admin ? ADMIN[lang].hintOut : ADMIN[lang].hintIn;
+    document.getElementById("search").placeholder = U.search;
+    document.getElementById("scan").textContent = U.scan;
+    document.getElementById("camBtn").textContent = U.cam;
+    document.getElementById("galBtn").textContent = U.gal;
+    document.getElementById("measureBtn").textContent = U.measure;
+    document.getElementById("add").textContent = U.add;
+    document.getElementById("logout").textContent = U.logout;
+    document.getElementById("themeBtn").title = U.theme;
+    document.getElementById("themeBtn").setAttribute("aria-label", U.theme);
+    document.querySelector(".lang").setAttribute("aria-label", U.langLbl);
+    renderCompanyBox();
+    var segBtns = document.querySelectorAll("#formSeg button");
+    var counts = { all: ITEMS.length, slab: 0, rest: 0 };
+    ITEMS.forEach(function (x) { counts[formOf(x)]++; });
+    Array.prototype.forEach.call(segBtns, function (b) {
+      var key = b.getAttribute("data-form");
+      var label = key === "all" ? ADMIN[lang].segAll : key === "slab" ? ADMIN[lang].segSlab : ADMIN[lang].segRest;
+      b.textContent = label + " · " + counts[key];
+      b.setAttribute("aria-pressed", String(formFilter === key));
+    });
+    document.getElementById("logout").textContent = T.logout;
+    document.getElementById("search").placeholder = T.search;
+    document.getElementById("scan").textContent = T.scan;
+    document.getElementById("add").textContent = T.add;
+    document.getElementById("sample").textContent = T.sample;
+    document.getElementById("camBtn").textContent = T.camera;
+    document.getElementById("galBtn").textContent = T.gallery;
+    document.getElementById("measureBtn").textContent = T.measure;
+    document.getElementById("mTitle").textContent = T.mTitle;
+    document.getElementById("mNote").textContent = T.mNote;
+    document.getElementById("mWl").textContent = T.mW;
+    document.getElementById("mHl").textContent = T.mH;
+    document.getElementById("mOk").textContent = T.mOk;
+    document.getElementById("mCancel").textContent = T.mCancel;
+    document.getElementById("foundReset").textContent = T.reset;
+    if (matches) foundText.textContent = T.foundTitle;
+
+    var tabs = document.getElementById("tabs");
+    tabs.innerHTML = "";
+    T.tabs.forEach(function (name, i) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tab"; b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", String(i === currentTab));
+      b.textContent = name;
+      tabs.appendChild(b);
+    });
+
+    var low = ITEMS.filter(function (x) { return x.st === "low"; }).length;
+    var kpis = document.getElementById("kpis");
+    kpis.innerHTML = "";
+    [[ITEMS.length, T.kpi[0], ""], [low, T.kpi[1], "warn"], [3, T.kpi[2], ""]].forEach(function (k) {
+      var d = document.createElement("div");
+      d.className = "kpi " + k[2];
+      d.innerHTML = "<b>" + k[0] + "</b><span></span>";
+      d.querySelector("span").textContent = k[1];
+      kpis.appendChild(d);
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".lang button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang));
+    });
+  }
+
+  function renderGrid() {
+    var T = DICT[lang];
+    grid.innerHTML = "";
+    var pool = (matches || ITEMS).filter(function (x) { return formFilter === "all" || formOf(x) === formFilter; });
+    var shown = pool.filter(function (x) {
+      var q = query.toLowerCase();
+      return !q || x.name.toLowerCase().indexOf(q) !== -1 || x.cell.toLowerCase().indexOf(q) !== -1;
+    });
+    shown.forEach(function (x, i) {
+      var c = document.createElement("article");
+      c.className = "card";
+      c.style.setProperty("--d", (i * 90) + "ms");
+      c.innerHTML =
+        '<div class="ph" style="background-image:url(' + x.img + ')"></div>' +
+        '<div class="body">' +
+          '<h3></h3>' +
+          '<p class="meta"></p>' +
+          '<div class="row"><span class="badge"></span><span class="meta"></span></div>' +
+          '<div class="actions"><button type="button" class="sm mv"></button><button type="button" class="sm ph2"></button></div>' +
+        '</div>';
+      c.querySelector("h3").textContent = displayName(x);
+      c.querySelector(".meta").textContent = T.kind[x.kind] + " · " + x.size + " · " + T.cell + " " + x.cell;
+      var badge = c.querySelector(".badge");
+      badge.textContent = T.st[x.st];
+      badge.className = "badge st-" + x.st;
+      c.querySelectorAll(".row .meta")[0].textContent = x.when;
+      c.querySelector(".mv").textContent = T.move;
+      c.querySelector(".ph2").textContent = T.photo;
+      grid.appendChild(c);
+    });
+  }
+
+  // Наклон карточки за курсором
+  grid.addEventListener("pointermove", function (e) {
+    var card = e.target.closest(".card");
+    if (!card) return;
+    var r = card.getBoundingClientRect();
+    var px = (e.clientX - r.left) / r.width - 0.5;
+    var py = (e.clientY - r.top) / r.height - 0.5;
+    card.style.setProperty("--ry", (px * 14).toFixed(1) + "deg");
+    card.style.setProperty("--rx", (-py * 12).toFixed(1) + "deg");
+  });
+  grid.addEventListener("pointerleave", function () {
+    Array.prototype.forEach.call(grid.children, function (c) {
+      c.style.setProperty("--rx", "0deg"); c.style.setProperty("--ry", "0deg");
+    });
+  }, true);
+
+  search.addEventListener("input", function () { query = search.value.trim(); renderGrid(); });
+
+  document.getElementById("lang") ; // placeholder for clarity
+  Array.prototype.forEach.call(document.querySelectorAll(".lang button"), function (b) {
+    b.addEventListener("click", function () {
+      lang = b.getAttribute("data-lang");
+      try { localStorage.setItem("granite.lang", lang); } catch (e) {}
+      renderStatic(); renderGrid(); if (currentTab) renderView(currentTab);
+    });
+  });
+
+  /* ---------- Поиск по фото: сравнение цвета и рисунка в браузере ---------- */
+  var sigCache = {};
+  function loadImg(src) {
+    return new Promise(function (resolve, reject) {
+      var im = new Image();
+      im.onload = function () { resolve(im); };
+      im.onerror = reject;
+      im.src = src;
+    });
+  }
+  function grid4(img) {
+    var c = document.createElement("canvas");
+    c.width = 32; c.height = 32;
+    var g = c.getContext("2d");
+    g.drawImage(img, 0, 0, 32, 32);
+    var d = g.getImageData(0, 0, 32, 32).data;
+    var out = [];
+    for (var gy = 0; gy < 4; gy++) {
+      for (var gx = 0; gx < 4; gx++) {
+        var r = 0, gg = 0, b = 0, n = 0;
+        for (var y = gy * 8; y < gy * 8 + 8; y++) {
+          for (var x = gx * 8; x < gx * 8 + 8; x++) {
+            var k = (y * 32 + x) * 4;
+            r += d[k]; gg += d[k + 1]; b += d[k + 2]; n++;
+          }
+        }
+        out.push(r / n, gg / n, b / n);
+      }
+    }
+    return out;
+  }
+  function signature(src) {
+    if (sigCache[src]) return Promise.resolve(sigCache[src]);
+    return loadImg(src).then(function (img) {
+      var v = grid4(img);
+      sigCache[src] = v;
+      return v;
+    });
+  }
+  function dist(a, b) {
+    var s = 0;
+    for (var i = 0; i < a.length; i++) { var d = a[i] - b[i]; s += d * d; }
+    return Math.sqrt(s);
+  }
+  function clearFound() {
+    matches = null;
+    found.hidden = true;
+    renderGrid();
+  }
+  document.getElementById("camBtn").addEventListener("click", function () { photoCam.click(); });
+  document.getElementById("galBtn").addEventListener("click", function () { photoGal.click(); });
+  document.getElementById("foundReset").addEventListener("click", clearFound);
+  function onPhotoPick(input) {
+    var f = input.files && input.files[0];
+    input.value = "";
+    if (!f) return;
+    var url = URL.createObjectURL(f);
+    if (scanMode) {
+      scanMode = false;
+      foundThumb.src = url;
+      foundText.textContent = ADMIN[lang].scanned;
+      found.hidden = false;
+      measureSec.hidden = false;
+      mW.value = ""; mH.value = ""; mErr.textContent = "";
+      mW.focus();
+      return;
+    }
+    loadImg(url).then(function (img) {
+      var q = grid4(img);
+      return Promise.all(ITEMS.map(function (x) {
+        return signature(x.img).then(function (s) { return { item: x, d: dist(q, s) }; });
+      })).then(function (res) {
+        res.sort(function (a, b) { return a.d - b.d; });
+        matches = res.slice(0, 4).map(function (r) { return r.item; });
+        foundThumb.src = url;
+        foundText.textContent = DICT[lang].foundTitle;
+        found.hidden = false;
+        renderGrid();
+      });
+    }).catch(function () {
+      matches = null;
+      foundText.textContent = DICT[lang].photoErr;
+      foundThumb.removeAttribute("src");
+      found.hidden = false;
+    });
+  }
+  /* ---------- Измерение: заглушка первого этапа, размеры вводятся вручную ---------- */
+  var measureSec = document.getElementById("measure");
+  var mW = document.getElementById("mW");
+  var mH = document.getElementById("mH");
+  var mErr = document.getElementById("mErr");
+  document.getElementById("measureBtn").addEventListener("click", function () {
+    mW.value = ""; mH.value = ""; mErr.textContent = "";
+    measureSec.hidden = false;
+    mW.focus();
+  });
+  document.getElementById("mCancel").addEventListener("click", function () { measureSec.hidden = true; });
+  document.getElementById("mOk").addEventListener("click", function () {
+    var w = parseFloat(mW.value), h = parseFloat(mH.value);
+    if (!(w > 0) || !(h > 0)) { mErr.textContent = DICT[lang].mBad; return; }
+    mErr.textContent = DICT[lang].mSaved;
+  });
+
+  document.getElementById("scan").addEventListener("click", function () {
+    scanMode = true;
+    photoCam.click();
+  });
+  photoCam.addEventListener("change", function () { onPhotoPick(photoCam); });
+  photoGal.addEventListener("change", function () { onPhotoPick(photoGal); });
+
+  /* ---------- Испанский ---------- */
+  DICT.es = {
+    brand: "Almacén de piedra", role: "Oficina", logout: "Salir",
+    tabs: ["Existencias", "Entradas", "Diario", "Pedidos", "Personal", "Catálogo"],
+    kpi: ["Placas en almacén", "Stock bajo", "Entradas hoy"],
+    search: "Buscar por nombre o celda", scan: "Escanear QR", add: "+ Añadir",
+    st: { ok: "en stock", low: "bajo", hold: "reservado" },
+    kind: { quartz: "cuarzo", granite: "granito" },
+    cell: "celda", move: "Mover", photo: "Foto",
+    sample: "Datos de ejemplo para la vista previa, no es un almacén real.",
+    camera: "Cámara", gallery: "Galería", reset: "Restablecer",
+    foundTitle: "Similares por color y veta (comparación aproximada)", photoErr: "No se pudo leer la foto",
+    measure: "Medir", mTitle: "Medidas de la pieza",
+    mNote: "Por ahora se introduce a mano. En la segunda etapa la app encontrará el marcador ArUco en la foto y calculará las medidas (mm).",
+    mW: "Ancho, mm", mH: "Alto, mm", mOk: "Confirmar", mCancel: "Cancelar",
+    mBad: "Introduzca medidas mayores que cero.", mSaved: "Vista previa: las medidas no se guardan en la base."
+  };
+  var ES_ROLES = { admin: "Administrador", staff: "Oficina" };
+  var ES_ADMIN = {
+    note: "Modo administrador: aquí puede añadir y eliminar empleados y posiciones.", add: "Añadir", del: "Eliminar",
+    fill: "Rellene todos los campos.",
+    setTitle: "Contraseña de administrador",
+    setNote: "Primera vez: elija su contraseña. En este navegador solo se guarda un hash. Mínimo 8 caracteres.",
+    inTitle: "Acceso de administrador",
+    inNote: "Introduzca la contraseña de administrador para añadir y eliminar empleados y posiciones.",
+    pw: "Contraseña", pw2: "Repita la contraseña", ok: "Entrar", okSet: "Guardar", cancel: "Cancelar",
+    short: "Mínimo 8 caracteres.", mismatch: "Las contraseñas no coinciden.", wrong: "Contraseña incorrecta.",
+    hintIn: "Pulse «Oficina» para entrar como administrador", hintOut: "Pulse para salir del modo administrador",
+    coLbl: "Nombre de la empresa (se ve en la entrada y en la portada)", coSave: "Guardar",
+    coSaved: "Guardado. Actualice la página de entrada para ver el nombre.",
+    coFail: "Este navegador no guarda los datos de la vista previa: el nombre no se guardó.",
+    scanned: "Foto hecha. Por ahora las medidas se introducen a mano: la lectura del QR y el autoajuste llegarán en la segunda etapa.",
+    segAll: "Todas", segSlab: "Placas enteras", segRest: "Restos"
+  };
+  var ES_VIEWS = [null,
+    { title: "Entradas", cols: ["Fecha", "Proveedor", "Placa", "Cant.", "Recibió"], rows: [
+      ["24.11 · 09:40", "Proveedor 1", "Calacatta Borghini Gold", "6 uds.", "Empleado 2"],
+      ["24.11 · 08:15", "Proveedor 2", "Nero Marquina", "4 uds.", "Empleado 3"],
+      ["23.11 · 16:02", "Proveedor 1", "Arctic Noir", "8 uds.", "Empleado 2"] ] },
+    { title: "Diario", cols: ["Hora", "Acción", "Placa", "Celda", "Quién"], rows: [
+      ["24.11 · 10:14", "Entrada", "Onda de montaña", "A-01", "Empleado 2"],
+      ["24.11 · 11:20", "Traslado", "Nero Marquina", "C-02", "Empleado 3"],
+      ["24.11 · 12:05", "Salida", "Arctic Noir", "D-01", "Empleado 1"] ] },
+    { title: "Pedidos", cols: ["Número", "Cliente", "Placa", "Cant.", "Estado"], rows: [
+      ["P-1042", "Cliente 1", "Nero Marquina", "2 uds.", "reservado"],
+      ["P-1043", "Cliente 2", "Paragon", "3 uds.", "listo para recoger"],
+      ["P-1044", "Cliente 3", "Madawaska", "1 ud.", "espera material"] ] },
+    { title: "Personal", cols: ["Nombre", "Cargo", "E-mail", "Turno"], rows: [
+      ["Empleado 1", "Oficina", "—", "día"],
+      ["Empleado 2", "Pulidor", "—", "día"],
+      ["Empleado 3", "Aserrador", "—", "noche"] ] },
+    { title: "Catálogo", cols: ["Nombre", "Tipo", "Tamaño, mm", "Celda"], rows: [
+      ["Onda de montaña", "cuarzo", "2400 × 1200", "A-01"],
+      ["Calacatta Borghini Gold", "cuarzo", "2400 × 1100", "A-02"],
+      ["Scandi Black", "cuarzo", "1800 × 600", "B-04"],
+      ["Madawaska", "cuarzo", "2400 × 1200", "B-07"],
+      ["Nero Marquina", "granito", "2100 × 900", "C-02"],
+      ["Paragon", "cuarzo", "2400 × 1200", "C-05"],
+      ["Arctic Noir", "cuarzo", "1500 × 900", "D-01"],
+      ["White Panda", "cuarzo", "2400 × 1200", "D-03"] ] }
+  ];
+
+  /* ---------- Тема: светлая или тёмная, запоминается на устройстве ---------- */
+  var themeBtn = document.getElementById("themeBtn");
+  function applyTheme(t) {
+    if (t === "dark") document.documentElement.setAttribute("data-theme", "dark");
+    else document.documentElement.removeAttribute("data-theme");
+    themeBtn.textContent = t === "dark" ? "☀" : "☾";
+    try { localStorage.setItem("granite.theme", t); } catch (e) {}
+  }
+  themeBtn.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+  var savedTheme = "light";
+  try { savedTheme = localStorage.getItem("granite.theme") || "light"; } catch (e) {}
+  applyTheme(savedTheme);
+
+  /* ---------- Название компании: пишется здесь, показывается на входе и в заставке ---------- */
+  var CO_KEY = "granite.company";
+  function getCompany() {
+    try { return localStorage.getItem(CO_KEY) || ""; } catch (e) { return ""; }
+  }
+  function renderCompanyBox() {
+    var box = document.getElementById("companyBox");
+    box.innerHTML = "";
+    box.hidden = !admin;
+    if (!admin) return;
+    var A = ADMIN[lang];
+    var lbl = document.createElement("p");
+    lbl.className = "mnote";
+    lbl.textContent = A.coLbl;
+    var row = document.createElement("div");
+    row.className = "addform";
+    var inp = document.createElement("input");
+    inp.value = getCompany();
+    inp.maxLength = 60;
+    inp.setAttribute("aria-label", A.coLbl);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn gold";
+    btn.textContent = A.coSave;
+    var msg = document.createElement("p");
+    msg.className = "mnote";
+    btn.addEventListener("click", function () {
+      var v = inp.value.trim();
+      var ok = true;
+      try {
+        if (v) localStorage.setItem(CO_KEY, v); else localStorage.removeItem(CO_KEY);
+        ok = (localStorage.getItem(CO_KEY) || "") === v;
+      } catch (e) { ok = false; }
+      msg.textContent = ok ? A.coSaved : A.coFail;
+    });
+    row.appendChild(inp);
+    row.appendChild(btn);
+    box.appendChild(lbl);
+    box.appendChild(row);
+    box.appendChild(msg);
+  }
+
+  /* ---------- Страницы вкладок: приход, журнал, заказы, персонал, каталог ---------- */
+  var VIEWS = {
+    ru: [null,
+      { title: "Приход", cols: ["Дата", "Поставщик", "Плита", "Кол-во", "Принял"], rows: [
+        ["24.11 · 09:40", "Поставщик 1", "Calacatta Borghini Gold", "6 шт.", "Сотрудник 2"],
+        ["24.11 · 08:15", "Поставщик 2", "Nero Marquina", "4 шт.", "Сотрудник 3"],
+        ["23.11 · 16:02", "Поставщик 1", "Arctic Noir", "8 шт.", "Сотрудник 2"] ] },
+      { title: "Журнал", cols: ["Время", "Действие", "Плита", "Ячейка", "Кто"], rows: [
+        ["24.11 · 10:14", "Приход", "Горная волна", "A-01", "Сотрудник 2"],
+        ["24.11 · 11:20", "Перемещение", "Nero Marquina", "C-02", "Сотрудник 3"],
+        ["24.11 · 12:05", "Расход", "Arctic Noir", "D-01", "Сотрудник 1"] ] },
+      { title: "Заказы", cols: ["Номер", "Клиент", "Плита", "Кол-во", "Статус"], rows: [
+        ["З-1042", "Клиент 1", "Nero Marquina", "2 шт.", "в резерве"],
+        ["З-1043", "Клиент 2", "Paragon", "3 шт.", "готов к выдаче"],
+        ["З-1044", "Клиент 3", "Madawaska", "1 шт.", "ждёт материал"] ] },
+      { title: "Персонал", cols: ["Имя", "Роль", "E-mail", "Смена"], rows: [
+        ["Сотрудник 1", "Офис", "—", "день"],
+        ["Сотрудник 2", "Полировщик", "—", "день"],
+        ["Сотрудник 3", "Пильщик", "—", "ночь"] ] },
+      { title: "Каталог", cols: ["Название", "Тип", "Размер, мм", "Ячейка"], rows: [
+        ["Горная волна", "кварц", "2400 × 1200", "A-01"],
+        ["Calacatta Borghini Gold", "кварц", "2400 × 1100", "A-02"],
+        ["Scandi Black", "кварц", "1800 × 600", "B-04"],
+        ["Madawaska", "кварц", "2400 × 1200", "B-07"],
+        ["Nero Marquina", "гранит", "2100 × 900", "C-02"],
+        ["Paragon", "кварц", "2400 × 1200", "C-05"],
+        ["Arctic Noir", "кварц", "1500 × 900", "D-01"],
+        ["White Panda", "кварц", "2400 × 1200", "D-03"] ] }
+    ],
+    fr: [null,
+      { title: "Entrées", cols: ["Date", "Fournisseur", "Plaque", "Qté", "Reçu par"], rows: [
+        ["24.11 · 09:40", "Fournisseur 1", "Calacatta Borghini Gold", "6 pcs", "Employé 2"],
+        ["24.11 · 08:15", "Fournisseur 2", "Nero Marquina", "4 pcs", "Employé 3"],
+        ["23.11 · 16:02", "Fournisseur 1", "Arctic Noir", "8 pcs", "Employé 2"] ] },
+      { title: "Journal", cols: ["Heure", "Action", "Plaque", "Emplacement", "Qui"], rows: [
+        ["24.11 · 10:14", "Entrée", "Horn wave", "A-01", "Employé 2"],
+        ["24.11 · 11:20", "Déplacement", "Nero Marquina", "C-02", "Employé 3"],
+        ["24.11 · 12:05", "Sortie", "Arctic Noir", "D-01", "Employé 1"] ] },
+      { title: "Commandes", cols: ["Numéro", "Client", "Plaque", "Qté", "Statut"], rows: [
+        ["C-1042", "Client 1", "Nero Marquina", "2 pcs", "réservé"],
+        ["C-1043", "Client 2", "Paragon", "3 pcs", "prêt à retirer"],
+        ["C-1044", "Client 3", "Madawaska", "1 pc", "attend matériau"] ] },
+      { title: "Personnel", cols: ["Nom", "Rôle", "E-mail", "Équipe"], rows: [
+        ["Employé 1", "Bureau", "—", "jour"],
+        ["Employé 2", "Polisseur", "—", "jour"],
+        ["Employé 3", "Scieur", "—", "nuit"] ] },
+      { title: "Catalogue", cols: ["Nom", "Type", "Taille, mm", "Emplacement"], rows: [
+        ["Horn wave", "quartz", "2400 × 1200", "A-01"],
+        ["Calacatta Borghini Gold", "quartz", "2400 × 1100", "A-02"],
+        ["Scandi Black", "quartz", "1800 × 600", "B-04"],
+        ["Madawaska", "quartz", "2400 × 1200", "B-07"],
+        ["Nero Marquina", "granit", "2100 × 900", "C-02"],
+        ["Paragon", "quartz", "2400 × 1200", "C-05"],
+        ["Arctic Noir", "quartz", "1500 × 900", "D-01"],
+        ["White Panda", "quartz", "2400 × 1200", "D-03"] ] }
+    ],
+    en: [null,
+      { title: "Intake", cols: ["Date", "Supplier", "Slab", "Qty", "Received by"], rows: [
+        ["24.11 · 09:40", "Supplier 1", "Calacatta Borghini Gold", "6 pcs", "Employee 2"],
+        ["24.11 · 08:15", "Supplier 2", "Nero Marquina", "4 pcs", "Employee 3"],
+        ["23.11 · 16:02", "Supplier 1", "Arctic Noir", "8 pcs", "Employee 2"] ] },
+      { title: "Journal", cols: ["Time", "Action", "Slab", "Cell", "Who"], rows: [
+        ["24.11 · 10:14", "Intake", "Mountain wave", "A-01", "Employee 2"],
+        ["24.11 · 11:20", "Move", "Nero Marquina", "C-02", "Employee 3"],
+        ["24.11 · 12:05", "Outgoing", "Arctic Noir", "D-01", "Employee 1"] ] },
+      { title: "Orders", cols: ["Number", "Client", "Slab", "Qty", "Status"], rows: [
+        ["O-1042", "Client 1", "Nero Marquina", "2 pcs", "reserved"],
+        ["O-1043", "Client 2", "Paragon", "3 pcs", "ready for pickup"],
+        ["O-1044", "Client 3", "Madawaska", "1 pc", "waiting for material"] ] },
+      { title: "Staff", cols: ["Name", "Role", "E-mail", "Shift"], rows: [
+        ["Employee 1", "Office", "—", "day"],
+        ["Employee 2", "Polisher", "—", "day"],
+        ["Employee 3", "Sawyer", "—", "night"] ] },
+      { title: "Catalog", cols: ["Name", "Type", "Size, mm", "Cell"], rows: [
+        ["Mountain wave", "quartz", "2400 × 1200", "A-01"],
+        ["Calacatta Borghini Gold", "quartz", "2400 × 1100", "A-02"],
+        ["Scandi Black", "quartz", "1800 × 600", "B-04"],
+        ["Madawaska", "quartz", "2400 × 1200", "B-07"],
+        ["Nero Marquina", "granite", "2100 × 900", "C-02"],
+        ["Paragon", "quartz", "2400 × 1200", "C-05"],
+        ["Arctic Noir", "quartz", "1500 × 900", "D-01"],
+        ["White Panda", "quartz", "2400 × 1200", "D-03"] ] }
+    ]
+  };
+
+  var stockEls = [document.querySelector(".kpis"), document.querySelector(".toolbar"),
+                  document.getElementById("grid"), document.getElementById("sample"),
+                  document.getElementById("found"), document.getElementById("measure"),
+                  document.getElementById("formSeg")];
+  var ROLES = {
+    ru: { admin: "Администратор", staff: "Офис" },
+    fr: { admin: "Administrateur", staff: "Bureau" },
+    en: { admin: "Administrator", staff: "Office" }
+  };
+  var ADMIN = {
+    ru: { note: "Режим администратора: здесь можно добавлять и удалять сотрудников и позиции.", add: "Добавить", del: "Удалить", fill: "Заполните все поля.", setTitle: "Пароль администратора", setNote: "Первый вход: придумайте свой пароль. В этом браузере хранится только хеш. Минимум 8 символов.", inTitle: "Вход администратора", inNote: "Введите пароль администратора, чтобы добавлять и удалять сотрудников и позиции.", pw: "Пароль", pw2: "Повторите пароль", ok: "Войти", okSet: "Сохранить", cancel: "Отмена", short: "Минимум 8 символов.", mismatch: "Пароли не совпадают.", wrong: "Неверный пароль.", hintIn: "Нажмите на «Офис», чтобы войти как администратор", hintOut: "Нажмите, чтобы выйти из режима администратора", coLbl: "Название компании (видно на входе и в заставке)", coSave: "Сохранить", coSaved: "Сохранено. Обновите страницу входа, чтобы увидеть название.", coFail: "Этот браузер не сохраняет данные превью: название не запомнилось.", scanned: "Фото сделано. Размеры пока вводятся вручную: считывание QR и автоизмерение будут на втором этапе.", segAll: "Все", segSlab: "Целые плиты", segRest: "Остатки" },
+    fr: { note: "Mode administrateur : ici vous pouvez ajouter et supprimer des employés et des plaques.", add: "Ajouter", del: "Supprimer", fill: "Remplissez tous les champs.", setTitle: "Mot de passe administrateur", setNote: "Première connexion : choisissez votre mot de passe. Seul un hachage est gardé dans ce navigateur. 8 caractères minimum.", inTitle: "Connexion administrateur", inNote: "Saisissez le mot de passe administrateur pour ajouter et supprimer des employés et des plaques.", pw: "Mot de passe", pw2: "Répétez le mot de passe", ok: "Se connecter", okSet: "Enregistrer", cancel: "Annuler", short: "8 caractères minimum.", mismatch: "Les mots de passe ne correspondent pas.", wrong: "Mot de passe incorrect.", hintIn: "Cliquez sur « Bureau » pour vous connecter comme administrateur", hintOut: "Cliquez pour quitter le mode administrateur", coLbl: "Nom de l’entreprise (visible à la connexion et sur l’écran d’accueil)", coSave: "Enregistrer", coSaved: "Enregistré. Rechargez la page d’accueil pour voir le nom.", coFail: "Ce navigateur ne garde pas les données de l’aperçu : le nom n’a pas été enregistré.", scanned: "Photo prise. Saisissez les dimensions à la main : la lecture du QR et des dimensions viendra à la deuxième étape.", segAll: "Tout", segSlab: "Plaques entières", segRest: "Chutes" },
+    en: { note: "Administrator mode: you can add and remove staff and items here.", add: "Add", del: "Delete", fill: "Fill in all fields.", setTitle: "Administrator password", setNote: "First time: choose your password. Only a hash is kept in this browser. At least 8 characters.", inTitle: "Administrator sign-in", inNote: "Enter the administrator password to add and remove staff and items.", pw: "Password", pw2: "Repeat password", ok: "Sign in", okSet: "Save", cancel: "Cancel", short: "At least 8 characters.", mismatch: "Passwords do not match.", wrong: "Wrong password.", hintIn: "Click “Office” to sign in as administrator", hintOut: "Click to leave administrator mode", coLbl: "Company name (shown on the sign-in and the splash screen)", coSave: "Save", coSaved: "Saved. Reload the splash page to see the name.", coFail: "This browser does not keep preview data: the name was not saved.", scanned: "Photo taken. Enter the sizes by hand for now: QR and size reading comes in the second stage.", segAll: "All", segSlab: "Whole slabs", segRest: "Remnants" }
+  };
+  // Правки превью: удалённые строки базовой таблицы и добавленные строки, по индексу вкладки
+  // Добавленные сотрудники сохраняются, чтобы страница работника (worker.html) их видела
+  var STAFF_KEY = "granite.staff";
+  function loadStaff() {
+    try { return JSON.parse(localStorage.getItem(STAFF_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function saveStaff() {
+    try { localStorage.setItem(STAFF_KEY, JSON.stringify(editState.extra[4] || [])); } catch (e) {}
+  }
+  var editState = { removed: {}, extra: { 4: loadStaff() } };
+  function rowsFor(i) {
+    var rows = VIEWS[lang][i].rows;
+    var rem = editState.removed[i] || {};
+    var base = rows.map(function (cells, k) { return { cells: cells, src: "b", k: k }; })
+                   .filter(function (x) { return !rem[x.k]; });
+    var extra = (editState.extra[i] || []).map(function (cells, k) { return { cells: cells, src: "e", k: k }; });
+    var logRows = i === 2 ? readWorkLog() : [];
+    return logRows.concat(base).concat(extra);
+  }
+  // Отметки со страницы работников (worker.html), новые сверху
+  function readWorkLog() {
+    var names = ["Сотрудник 1", "Сотрудник 2", "Сотрудник 3"];
+    var ops = ["Полировка", "Пиление", "Резка"];
+    try {
+      var list = JSON.parse(localStorage.getItem("granite.log") || "[]");
+      return list.slice().reverse().map(function (e) {
+        var d = new Date(e.time);
+        return { cells: [d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
+                         e.role || ops[e.op] || "", "—", "—", e.name || names[e.worker] || ""], src: "l", k: 0 };
+      });
+    } catch (err) { return []; }
+  }
+  function removeRow(i, x) {
+    if (x.src === "b") {
+      editState.removed[i] = editState.removed[i] || {};
+      editState.removed[i][x.k] = true;
+    } else {
+      editState.extra[i].splice(x.k, 1);
+      if (i === 4) saveStaff();
+    }
+    renderView(i);
+  }
+  function addForm(i, V) {
+    var wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.flexDirection = "column";
+    wrap.style.gap = "10px";
+    var note = document.createElement("p");
+    note.className = "adminnote";
+    note.textContent = ADMIN[lang].note;
+    wrap.appendChild(note);
+    var form = document.createElement("form");
+    form.className = "addform";
+    var inputs = V.cols.map(function (c) {
+      var inp = document.createElement("input");
+      inp.placeholder = c;
+      inp.setAttribute("aria-label", c);
+      form.appendChild(inp);
+      return inp;
+    });
+    var btn = document.createElement("button");
+    btn.type = "submit";
+    btn.className = "btn gold";
+    btn.textContent = ADMIN[lang].add;
+    form.appendChild(btn);
+    var err = document.createElement("p");
+    err.className = "merr";
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var vals = inputs.map(function (inp) { return inp.value.trim(); });
+      if (vals.some(function (v) { return !v; })) { err.textContent = ADMIN[lang].fill; return; }
+      editState.extra[i] = editState.extra[i] || [];
+      editState.extra[i].push(vals);
+      if (i === 4) saveStaff();
+      renderView(i);
+    });
+    wrap.appendChild(form);
+    wrap.appendChild(err);
+    return wrap;
+  }
+  function renderView(i) {
+    var V = VIEWS[lang][i];
+    var box = document.getElementById("view");
+    box.innerHTML = "";
+    var h = document.createElement("h2");
+    h.className = "view-title";
+    h.textContent = V.title;
+    box.appendChild(h);
+    var t = document.createElement("div");
+    t.className = "tbl";
+    var editable = admin && (i === 4 || i === 5);
+    function row(cells, head, x) {
+      var r = document.createElement("div");
+      r.className = "tbl-row" + (head ? " head" : "");
+      r.style.gridTemplateColumns = "repeat(" + V.cols.length + ", minmax(0, 1fr))" + (editable ? " auto" : "");
+      cells.forEach(function (c) {
+        var s = document.createElement("span");
+        s.textContent = c;
+        r.appendChild(s);
+      });
+      if (editable) {
+        var d = document.createElement("span");
+        if (x) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "sm";
+          b.textContent = ADMIN[lang].del;
+          b.addEventListener("click", function () { removeRow(i, x); });
+          d.appendChild(b);
+        }
+        r.appendChild(d);
+      }
+      t.appendChild(r);
+    }
+    row(V.cols, true, null);
+    rowsFor(i).forEach(function (x) { row(x.cells, false, x); });
+    box.appendChild(t);
+    if (editable) box.appendChild(addForm(i, V));
+    var p = document.createElement("p");
+    p.className = "sample";
+    p.textContent = DICT[lang].sample;
+    box.appendChild(p);
+  }
+  function setTab(i) {
+    currentTab = i;
+    var stock = i === 0;
+    stockEls.forEach(function (el) { el.classList.toggle("off", !stock); });
+    var box = document.getElementById("view");
+    if (stock) {
+      box.classList.add("off");
+      box.innerHTML = "";
+    } else {
+      renderView(i);
+      box.classList.remove("off");
+    }
+    renderStatic();
+  }
+  /* ---------- Пароль администратора: хранится только хеш с солью, в этом браузере ---------- */
+  var PW_KEY = "granite.adminpw";
+  var gate = document.getElementById("gate");
+  var gPw = document.getElementById("gPw");
+  var gPw2 = document.getElementById("gPw2");
+  var gPw2wrap = document.getElementById("gPw2wrap");
+  var gErr = document.getElementById("gErr");
+  function storedPw() {
+    try { return JSON.parse(localStorage.getItem(PW_KEY) || "null"); } catch (e) { return null; }
+  }
+  function hashPw(salt, pw) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pw)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+    });
+  }
+  function randomSalt() {
+    var a = new Uint8Array(16);
+    crypto.getRandomValues(a);
+    return Array.prototype.map.call(a, function (b) { return b.toString(16).padStart(2, "0"); }).join("");
+  }
+  function openGate(mode) {
+    var A = ADMIN[lang];
+    document.getElementById("gTitle").textContent = mode === "set" ? A.setTitle : A.inTitle;
+    document.getElementById("gNote").textContent = mode === "set" ? A.setNote : A.inNote;
+    document.getElementById("gPwl").textContent = A.pw;
+    document.getElementById("gPw2l").textContent = A.pw2;
+    gPw2wrap.hidden = mode !== "set";
+    document.getElementById("gOk").textContent = mode === "set" ? A.okSet : A.ok;
+    document.getElementById("gCancel").textContent = A.cancel;
+    gPw.value = ""; gPw2.value = ""; gErr.textContent = "";
+    gate.dataset.mode = mode;
+    gate.hidden = false;
+    gPw.focus();
+  }
+  function finishLogin() {
+    admin = true;
+    gate.hidden = true;
+    renderStatic();
+    if (currentTab) renderView(currentTab);
+  }
+  document.getElementById("formSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    formFilter = b.getAttribute("data-form");
+    renderStatic();
+    renderGrid();
+  });
+  document.getElementById("role").addEventListener("click", function () {
+    if (admin) {
+      admin = false;
+      renderStatic();
+      if (currentTab) renderView(currentTab);
+      return;
+    }
+    openGate(storedPw() ? "in" : "set");
+  });
+  document.getElementById("gCancel").addEventListener("click", function () { gate.hidden = true; });
+  gPw.addEventListener("keydown", function (e) { if (e.key === "Enter") document.getElementById("gOk").click(); });
+  gPw2.addEventListener("keydown", function (e) { if (e.key === "Enter") document.getElementById("gOk").click(); });
+  document.getElementById("gOk").addEventListener("click", function () {
+    var A = ADMIN[lang];
+    var p = gPw.value;
+    if (gate.dataset.mode === "set") {
+      if (p.length < 8) { gErr.textContent = A.short; return; }
+      if (p !== gPw2.value) { gErr.textContent = A.mismatch; return; }
+      var salt = randomSalt();
+      hashPw(salt, p).then(function (h) {
+        try { localStorage.setItem(PW_KEY, JSON.stringify({ salt: salt, hash: h })); } catch (e) {}
+        finishLogin();
+      });
+      return;
+    }
+    var s = storedPw();
+    if (!s) { openGate("set"); return; }
+    hashPw(s.salt, p).then(function (h) {
+      if (h !== s.hash) { gErr.textContent = A.wrong; gPw.value = ""; gPw.focus(); return; }
+      finishLogin();
+    });
+  });
+  document.getElementById("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest(".tab");
+    if (!b) return;
+    setTab(Array.prototype.indexOf.call(this.children, b));
+  });
+
+  /* Испанские словари объявлены выше основных объектов, поэтому присваиваем их здесь */
+  ROLES.es = ES_ROLES;
+  ADMIN.es = ES_ADMIN;
+  VIEWS.es = ES_VIEWS;
+
+  renderStatic();
+  renderGrid();
+})();
+</script>
+</body>
+</html>
