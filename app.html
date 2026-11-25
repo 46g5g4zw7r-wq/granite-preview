@@ -607,13 +607,35 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     }
     return viaDetector().then(function (c1) { return c1 || viaZxing(); }).then(function (c2) { return c2 || viaJsQr(); });
   }
+  // Текст со штрих-кода: название и размеры "W x H" (дюймы; если больше 200 — считаем миллиметрами)
+  function parseLabel(v) {
+    var m = v.match(/(\d+(?:[.,]\d+)?)\s*[x×*Xх]\s*(\d+(?:[.,]\d+)?)/);
+    var out = { name: v, w: "", h: "" };
+    if (!m) return out;
+    var w = parseFloat(m[1].replace(",", ".")), h = parseFloat(m[2].replace(",", "."));
+    if (w > 200 || h > 200) { w = w / 25.4; h = h / 25.4; }
+    out.w = String(Math.round(w * 10) / 10);
+    out.h = String(Math.round(h * 10) / 10);
+    out.name = v.replace(m[0], " ").replace(/[|;,]+/g, " ").replace(/\s+/g, " ").trim() || v;
+    return out;
+  }
   function takeByQr(url) {
     var L = ITEM_T[lang] || ITEM_T.ru;
     foundThumb.src = url;
     found.hidden = false;
     loadImg(url).then(readCodeFromImage).then(function (code) {
       var hit = code ? findCode(code) : null;
-      if (code && !hit) { found.hidden = true; openItemForm(); iCode.value = code; iName.value = code; autoMode = true; iErr.textContent = L.auto; return; }
+      if (code && !hit) {
+        found.hidden = true;
+        openItemForm();
+        var pr = parseLabel(code);
+        iCode.value = code;
+        iName.value = pr.name;
+        if (pr.w && pr.h) { iW.value = pr.w; iH.value = pr.h; }
+        autoMode = true;
+        iErr.textContent = L.auto;
+        return;
+      }
       if (!hit) { foundText.textContent = L.noQr; return; }
       cutPiece(hit);
     }).catch(function () { foundText.textContent = L.noQr; });
@@ -1200,6 +1222,10 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   }
 
   // Фото слаба в режиме штрих-кода: сохраняем кусок сразу, размеры и ячейку можно уточнить позже
+  function sizeText() {
+    var W = parseFloat(iW.value), H = parseFloat(iH.value);
+    return (W > 0 && H > 0) ? Math.round(W * 25.4) + " × " + Math.round(H * 25.4) : "— × —";
+  }
   function autoSave() {
     var L = ITEM_T[lang] || ITEM_T.ru;
     var code = iCode.value.trim() || nextCode();
@@ -1208,7 +1234,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     var now = new Date();
     var item = {
       name: name, kind: iKind.value, cell: "—", code: code, st: "ok", form: iForm.value, img: pendingImg,
-      size: "— × —",
+      size: sizeText(),
       when: String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
     };
     ADDED.push(item);
