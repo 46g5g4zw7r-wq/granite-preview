@@ -143,6 +143,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
 </head>
 <body>
 
@@ -169,7 +170,6 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 
   <section class="toolbar">
     <input class="search" id="search" type="search" placeholder="Поиск по названию или ячейке">
-    <input class="search" id="scanIn" type="text" autocomplete="off" style="max-width:240px">
     <button type="button" class="btn" id="scan">Сканировать код</button>
     <button type="button" class="btn" id="camBtn">Камера</button>
     <button type="button" class="btn" id="galBtn">Галерея</button>
@@ -550,14 +550,6 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     });
   }
   /* ---------- Код с этикетки: сканер вводит код, или фото с телефона ---------- */
-  var scanIn = document.getElementById("scanIn");
-  scanIn.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    var c = scanIn.value.trim();
-    scanIn.value = "";
-    if (c) handleCode(c);
-  });
   function findCode(code) {
     var hit = null;
     ITEMS.forEach(function (x) { if (x.code === code) hit = x; });
@@ -591,11 +583,19 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   }
   // Кнопка «Сканировать код» с телефона: фото этикетки. Штрих-код и QR читаем, если браузер умеет
   function readCodeFromImage(img) {
-    var det = null;
-    try { if ("BarcodeDetector" in window) det = new BarcodeDetector({ formats: ["qr_code", "code_128", "ean_13", "code_39"] }); } catch (e) { det = null; }
-    var viaDetector = det ? det.detect(img).then(function (rs) { return rs[0] ? String(rs[0].rawValue).trim() : ""; }).catch(function () { return ""; }) : Promise.resolve("");
-    return viaDetector.then(function (code) {
-      if (code) return code;
+    function viaDetector() {
+      try {
+        if (!("BarcodeDetector" in window)) return Promise.resolve("");
+        var det = new BarcodeDetector({ formats: ["qr_code", "code_128", "ean_13", "ean_8", "code_39", "upc_a"] });
+        return det.detect(img).then(function (rs) { return rs[0] ? String(rs[0].rawValue).trim() : ""; }).catch(function () { return ""; });
+      } catch (e) { return Promise.resolve(""); }
+    }
+    function viaZxing() {
+      if (!(window.ZXing && ZXing.BrowserMultiFormatReader)) return Promise.resolve("");
+      return new ZXing.BrowserMultiFormatReader().decodeFromImageElement(img)
+        .then(function (r) { return String(r.getText()).trim(); }).catch(function () { return ""; });
+    }
+    function viaJsQr() {
       var k = Math.min(1, 1200 / Math.max(img.width, img.height));
       var c = document.createElement("canvas");
       c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
@@ -603,8 +603,9 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       g.drawImage(img, 0, 0, c.width, c.height);
       var px = g.getImageData(0, 0, c.width, c.height);
       var r = (typeof jsQR === "function") ? jsQR(px.data, c.width, c.height) : null;
-      return r && r.data ? String(r.data).trim() : "";
-    });
+      return Promise.resolve(r && r.data ? String(r.data).trim() : "");
+    }
+    return viaDetector().then(function (c1) { return c1 || viaZxing(); }).then(function (c2) { return c2 || viaJsQr(); });
   }
   function takeByQr(url) {
     var L = ITEM_T[lang] || ITEM_T.ru;
@@ -612,7 +613,8 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     found.hidden = false;
     loadImg(url).then(readCodeFromImage).then(function (code) {
       var hit = code ? findCode(code) : null;
-      if (!hit) { foundText.textContent = code ? L.noCode.replace("{code}", code) : L.noQr; return; }
+      if (code && !hit) { found.hidden = true; openItemForm(); iCode.value = code; iErr.textContent = L.newCode; return; }
+      if (!hit) { foundText.textContent = L.noQr; return; }
       cutPiece(hit);
     }).catch(function () { foundText.textContent = L.noQr; });
   }
@@ -1229,7 +1231,6 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   ADMIN.es = ES_ADMIN;
   VIEWS.es = ES_VIEWS;
 
-  scanIn.placeholder = (ITEM_T[lang] || ITEM_T.ru).scanIn;
   renderStatic();
   renderGrid();
 })();
