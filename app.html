@@ -190,6 +190,22 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
       <button type="button" class="btn gold" id="gOk"></button>
     </div>
   </section>
+  <section class="measure" id="itemForm" hidden>
+    <h3 id="iTitle"></h3>
+    <p class="mnote" id="iNote"></p>
+    <label><span id="iNameL"></span><input id="iName" type="text" autocomplete="off"></label>
+    <label><span id="iKindL"></span><select id="iKind"></select></label>
+    <label><span id="iCellL"></span><input id="iCell" type="text" autocomplete="off" placeholder="A-01"></label>
+    <label><span id="iWL"></span><input id="iW" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
+    <label><span id="iHL"></span><input id="iH" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
+    <label><span id="iFormL"></span><select id="iForm"></select></label>
+    <label><span id="iPhL"></span><input id="iPh" type="file" accept="image/*"></label>
+    <p class="merr" id="iErr" role="alert"></p>
+    <div class="mbtns">
+      <button type="button" class="btn" id="iCancel"></button>
+      <button type="button" class="btn gold" id="iOk"></button>
+    </div>
+  </section>
   <section class="measure" id="measure" hidden>
     <h3 id="mTitle"></h3>
     <p class="mnote" id="mNote"></p>
@@ -256,6 +272,12 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     { name: "White Panda",           kind: "quartz",  size: "2400 × 1200", cell: "D-03", st: "ok",   img: "img/s8.jpg", when: "07:30" }
   ];
 
+  // Куски, которые добавили работники, хранятся в браузере и видны в списке
+  var ITEM_KEY = "granite.items";
+  var ADDED = [];
+  try { ADDED = JSON.parse(localStorage.getItem(ITEM_KEY) || "[]"); } catch (e) { ADDED = []; }
+  ITEMS = ITEMS.concat(ADDED);
+
   // Переводы названий позиций. Если перевода нет, показывается исходное название.
   var NAMES = {
     fr: { "Горная волна": "Vague de montagne" },
@@ -287,7 +309,7 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
   var formFilter = "all";
   // Пример: какие позиции в превью — остатки. В приложении признак задаётся при приходе.
   var REST = { "Scandi Black": 1, "Arctic Noir": 1 };
-  function formOf(x) { return REST[x.name] ? "rest" : "slab"; }
+  function formOf(x) { return x.form || (REST[x.name] ? "rest" : "slab"); }
   var found = document.getElementById("found");
   var foundThumb = document.getElementById("foundThumb");
   var foundText = document.getElementById("foundText");
@@ -981,12 +1003,84 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
     setTab(Array.prototype.indexOf.call(this.children, b));
   });
 
-  /* Кнопка «+ Добавить»: без входа открывает вход администратора; с входом переходит к форме добавления */
-  document.getElementById("add").addEventListener("click", function () {
-    if (!admin) { openGate(storedPw() ? "in" : "set"); return; }
-    if (currentTab !== 4 && currentTab !== 5) setTab(4);
-    var f = document.querySelector("#view .addform input");
-    if (f) { f.scrollIntoView({ block: "center" }); f.focus(); }
+  /* ---------- Новый кусок (работник принимает плиту или остаток и меряет) ---------- */
+  var ITEM_T = {
+    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", cancel: "Отмена", ok: "Сохранить" },
+    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", cancel: "Annuler", ok: "Enregistrer" },
+    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Photo (optional)", err: "Fill in the name, cell and sizes above zero.", cancel: "Cancel", ok: "Save" },
+    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", cancel: "Cancelar", ok: "Guardar" }
+  };
+  var itemForm = document.getElementById("itemForm");
+  var iName = document.getElementById("iName"), iKind = document.getElementById("iKind");
+  var iCell = document.getElementById("iCell"), iW = document.getElementById("iW"), iH = document.getElementById("iH");
+  var iForm = document.getElementById("iForm"), iPh = document.getElementById("iPh"), iErr = document.getElementById("iErr");
+  var pendingImg = "";
+
+  function openItemForm() {
+    var L = ITEM_T[lang] || ITEM_T.ru, K = DICT[lang].kind;
+    document.getElementById("iTitle").textContent = L.title;
+    document.getElementById("iNote").textContent = L.note;
+    document.getElementById("iNameL").textContent = L.name;
+    document.getElementById("iKindL").textContent = L.kind;
+    document.getElementById("iCellL").textContent = L.cell;
+    document.getElementById("iWL").textContent = L.w;
+    document.getElementById("iHL").textContent = L.h;
+    document.getElementById("iFormL").textContent = L.form;
+    document.getElementById("iPhL").textContent = L.photo;
+    document.getElementById("iCancel").textContent = L.cancel;
+    document.getElementById("iOk").textContent = L.ok;
+    iKind.innerHTML = "";
+    iForm.innerHTML = "";
+    [["quartz", K.quartz], ["granite", K.granite]].forEach(function (o) { iKind.add(new Option(o[1], o[0])); });
+    [["slab", L.slab], ["rest", L.rest]].forEach(function (o) { iForm.add(new Option(o[1], o[0])); });
+    iName.value = ""; iCell.value = ""; iW.value = ""; iH.value = ""; iPh.value = "";
+    iErr.textContent = ""; pendingImg = "";
+    itemForm.hidden = false;
+    setTimeout(function () { iName.focus(); }, 40);
+  }
+
+  // Фото сжимаем до 480 px, чтобы уложиться в память браузера
+  iPh.addEventListener("change", function () {
+    var f = iPh.files && iPh.files[0];
+    if (!f) { pendingImg = ""; return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var k = Math.min(1, 480 / Math.max(im.width, im.height));
+        var c = document.createElement("canvas");
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        pendingImg = c.toDataURL("image/jpeg", 0.8);
+      };
+      im.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  });
+
+  function saveItem() {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    var name = iName.value.trim(), cell = iCell.value.trim();
+    var W = parseFloat(iW.value), H = parseFloat(iH.value);
+    if (!name || !cell || !(W > 0) || !(H > 0)) { iErr.textContent = L.err; return; }
+    var now = new Date();
+    var item = {
+      name: name, kind: iKind.value, cell: cell, st: "ok", form: iForm.value, img: pendingImg,
+      size: Math.round(W * 25.4) + " × " + Math.round(H * 25.4),
+      when: String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
+    };
+    ADDED.push(item);
+    ITEMS.push(item);
+    try { localStorage.setItem(ITEM_KEY, JSON.stringify(ADDED)); } catch (e) {}
+    itemForm.hidden = true;
+    renderGrid();
+  }
+
+  document.getElementById("add").addEventListener("click", openItemForm);
+  document.getElementById("iCancel").addEventListener("click", function () { itemForm.hidden = true; });
+  document.getElementById("iOk").addEventListener("click", saveItem);
+  [iName, iCell, iW, iH].forEach(function (inp) {
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") saveItem(); });
   });
 
   /* Испанские словари объявлены выше основных объектов, поэтому присваиваем их здесь */
