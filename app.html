@@ -1005,10 +1005,10 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
 
   /* ---------- Новый кусок (работник принимает плиту или остаток и меряет) ---------- */
   var ITEM_T = {
-    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", cancel: "Отмена", ok: "Сохранить" },
-    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", cancel: "Annuler", ok: "Enregistrer" },
-    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", cancel: "Cancel", ok: "Save" },
-    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", cancel: "Cancelar", ok: "Guardar" }
+    ru: { title: "Новый кусок", note: "Введите название, ячейку и размеры в дюймах. Тип выберите: целая плита или остаток.", name: "Название", kind: "Материал", cell: "Ячейка", w: "Ширина, дюймы", h: "Высота, дюймы", form: "Тип", slab: "Целая плита", rest: "Остаток", photo: "Сделать фото (необязательно)", err: "Заполните название, ячейку и размеры больше нуля.", known: "Похоже на «{name}». Название подставлено, проверьте.", cancel: "Отмена", ok: "Сохранить" },
+    fr: { title: "Nouvelle pièce", note: "Saisissez le nom, l’emplacement et les dimensions en pouces. Choisissez le type : plaque entière ou chute.", name: "Nom", kind: "Matériau", cell: "Emplacement", w: "Largeur, pouces", h: "Hauteur, pouces", form: "Type", slab: "Plaque entière", rest: "Chute", photo: "Prendre une photo (facultatif)", err: "Remplissez le nom, l’emplacement et des dimensions supérieures à zéro.", known: "Ressemble à « {name} ». Nom rempli, vérifiez.", cancel: "Annuler", ok: "Enregistrer" },
+    en: { title: "New piece", note: "Enter the name, cell and size in inches. Choose the type: whole slab or remnant.", name: "Name", kind: "Material", cell: "Cell", w: "Width, inches", h: "Height, inches", form: "Type", slab: "Whole slab", rest: "Remnant", photo: "Take a photo (optional)", err: "Fill in the name, cell and sizes above zero.", known: "Looks like “{name}”. Name filled in, please check.", cancel: "Cancel", ok: "Save" },
+    es: { title: "Pieza nueva", note: "Introduzca el nombre, la celda y las medidas en pulgadas. Elija el tipo: placa entera o resto.", name: "Nombre", kind: "Material", cell: "Celda", w: "Ancho, pulgadas", h: "Alto, pulgadas", form: "Tipo", slab: "Placa entera", rest: "Resto", photo: "Hacer foto (opcional)", err: "Complete el nombre, la celda y medidas mayores que cero.", known: "Parece «{name}». Nombre rellenado, revise.", cancel: "Cancelar", ok: "Guardar" }
   };
   var itemForm = document.getElementById("itemForm");
   var iName = document.getElementById("iName"), iKind = document.getElementById("iKind");
@@ -1052,11 +1052,29 @@ html[data-theme="dark"] .addform{border-color:#3d4047}
         c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
         c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
         pendingImg = c.toDataURL("image/jpeg", 0.8);
+        recognize(pendingImg);
       };
       im.src = rd.result;
     };
     rd.readAsDataURL(f);
   });
+
+  // Порог похожести: чем меньше расстояние, тем больше фото похоже на сохранённое
+  var RECOG_T = 28;
+  function recognize(src) {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    signature(src).then(function (q) {
+      return Promise.all(ITEMS.map(function (x) {
+        return signature(x.img).then(function (s) { return { item: x, d: dist(q, s) }; }, function () { return null; });
+      }));
+    }).then(function (res) {
+      res = res.filter(Boolean).sort(function (a, b) { return a.d - b.d; });
+      if (!res.length || res[0].d > RECOG_T) return;
+      var best = res[0].item;
+      if (!iName.value.trim()) iName.value = best.name;
+      iErr.textContent = L.known.replace("{name}", best.name);
+    }).catch(function () {});
+  }
 
   function saveItem() {
     var L = ITEM_T[lang] || ITEM_T.ru;
