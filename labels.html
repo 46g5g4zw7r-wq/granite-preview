@@ -37,7 +37,7 @@
 <body>
 <div class="wrap">
   <h1>Печать QR-наклеек</h1>
-  <p class="note">Наклейка 20 × 60 мм, QR 18 мм. Печатайте в масштабе 100 %, без «По размеру страницы». Номера S-001… берутся из счётчика приложения, поэтому повторов не будет. В QR записан только номер куска.</p>
+  <p class="note">Наклейка 20 × 60 мм, QR 18 мм. Печатайте в масштабе 100 %, без «По размеру страницы». Номера S-001… берутся из счётчика приложения, поэтому повторов не будет. В QR записаны номер, название, размер и ячейка.</p>
 
   <form id="f">
     <label class="full">Название камня (необязательно)
@@ -78,6 +78,12 @@
     return codes;
   }
 
+  // Размер "126 × 36" или "126x36" -> "126x36"; в QR нельзя вводить разделитель "|"
+  function cleanPart(v) { return String(v || "").replace(/\|/g, " ").replace(/\s+/g, " ").trim(); }
+  function sizeForQr(v) {
+    var m = String(v || "").match(/(\d+(?:[.,]\d+)?)\s*[x×*Xх]\s*(\d+(?:[.,]\d+)?)/);
+    return m ? m[1] + "x" + m[2] : "";
+  }
   function makeLabel(code, name, size, cell) {
     var box = document.createElement("div");
     box.className = "label";
@@ -97,7 +103,8 @@
       box.appendChild(t);
     }
     if (window.QRCode) {
-      new QRCode(qr, { text: code, width: 68, height: 68, correctLevel: QRCode.CorrectLevel.M });
+      var payload = [code, cleanPart(name), sizeForQr(size), cleanPart(cell)].join("|");
+      new QRCode(qr, { text: payload, width: 68, height: 68, correctLevel: QRCode.CorrectLevel.M });
     }
     return box;
   }

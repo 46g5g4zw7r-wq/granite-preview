@@ -750,6 +750,13 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     }
     return viaDetector().then(function (c1) { return c1 || viaZxing(); }).then(function (c2) { return c2 || viaJsQr(); });
   }
+  // QR с наклейки: "номер|название|размер|ячейка" (размер "126x36"). Если разделителей нет — null
+  function parsePayload(text) {
+    var parts = String(text).split("|");
+    if (parts.length < 2) return null;
+    var size = parseLabel(parts[2] || "");
+    return { code: parts[0].trim(), name: (parts[1] || "").trim(), w: size.w, h: size.h, cell: (parts[3] || "").trim() };
+  }
   // Текст со штрих-кода: название и размеры "W x H" (дюймы; если больше 200 — считаем миллиметрами)
   function parseLabel(v) {
     var m = v.match(/(\d+(?:[.,]\d+)?)\s*[x×*Xх]\s*(\d+(?:[.,]\d+)?)/);
@@ -766,15 +773,18 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     var L = ITEM_T[lang] || ITEM_T.ru;
     foundThumb.src = url;
     found.hidden = false;
-    loadImg(url).then(readCodeFromImage).then(function (code) {
+    loadImg(url).then(readCodeFromImage).then(function (raw) {
+      var pl = parsePayload(raw);
+      var code = pl ? pl.code : raw;
       var hit = code ? findCode(code) : null;
       if (code && !hit) {
         found.hidden = true;
         openItemForm();
-        var pr = parseLabel(code);
+        var pr = pl ? { name: pl.name, w: pl.w, h: pl.h } : parseLabel(raw);
         iCode.value = code;
         iName.value = pr.name;
         if (pr.w && pr.h) { iW.value = pr.w; iH.value = pr.h; }
+        iCell.value = pl ? pl.cell : "";
         autoMode = true;
         iErr.textContent = L.auto;
         return;
@@ -1399,7 +1409,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     if (ITEMS.some(function (x) { return x.code === code; })) { iErr.textContent = L.dup; return; }
     var now = new Date();
     var item = {
-      name: name, kind: iKind.value, cell: "—", code: code, st: "ok", form: iForm.value, img: pendingImg,
+      name: name, kind: iKind.value, cell: iCell.value.trim() || "—", code: code, st: "ok", form: iForm.value, img: pendingImg,
       size: sizeText(),
       when: String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0")
     };
