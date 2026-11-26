@@ -1206,11 +1206,16 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   function storedPw() {
     try { return JSON.parse(localStorage.getItem(PW_KEY) || "null"); } catch (e) { return null; }
   }
-  function hashPw(salt, pw) {
-    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pw)).then(function (buf) {
-      return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, "0"); }).join("");
-    });
+  // Passwords: PBKDF2-SHA-256 with 310000 rounds (v:2). Older SHA-256 entries are checked once and upgraded.
+  function hashPwLegacy(salt, pw) {
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":" + pw)).then(hexOf);
   }
+  function hashPw(salt, pw) {
+    return crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]).then(function (key) {
+      return crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode(salt), iterations: 310000 }, key, 256);
+    }).then(hexOf);
+  }
+  function hexOf(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }
   function randomSalt() {
     var a = new Uint8Array(16);
     crypto.getRandomValues(a);
@@ -1263,16 +1268,21 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       if (p !== gPw2.value) { gErr.textContent = A.mismatch; return; }
       var salt = randomSalt();
       hashPw(salt, p).then(function (h) {
-        try { localStorage.setItem(PW_KEY, JSON.stringify({ salt: salt, hash: h })); } catch (e) {}
+        try { localStorage.setItem(PW_KEY, JSON.stringify({ v: 2, salt: salt, hash: h })); } catch (e) {}
         finishLogin();
       });
       return;
     }
     var s = storedPw();
     if (!s) { openGate("set"); return; }
-    hashPw(s.salt, p).then(function (h) {
+    (s.v === 2 ? hashPw(s.salt, p) : hashPwLegacy(s.salt, p)).then(function (h) {
       if (h !== s.hash) { gErr.textContent = A.wrong; gPw.value = ""; gPw.focus(); return; }
-      finishLogin();
+      if (s.v === 2) { finishLogin(); return; }
+      var ns = randomSalt();
+      hashPw(ns, p).then(function (nh) {
+        try { localStorage.setItem(PW_KEY, JSON.stringify({ v: 2, salt: ns, hash: nh })); } catch (e) {}
+        finishLogin();
+      });
     });
   });
   document.getElementById("tabs").addEventListener("click", function (e) {
