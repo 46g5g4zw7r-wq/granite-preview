@@ -23,14 +23,18 @@
   .label .qr img, .label .qr canvas { width:18mm !important; height:18mm !important; }
   .label .code { font-weight:800; font-size:3.6mm; margin-top:1mm; letter-spacing:.2mm; }
   .label .txt { font-size:2.4mm; line-height:1.25; text-align:center; word-break:break-word; margin-top:.8mm; }
-  @page { size: 20mm 60mm; margin: 0; }
+  #sheet.sheet { display:grid; grid-template-columns:repeat(10, 20mm); gap:0; }
+  #sheet.sheet .label { border:1px dashed #ccc; }
   @media print {
     body { background:#fff; }
     .wrap > *:not(#sheet) { display:none !important; }
     .wrap { padding:0; max-width:none; }
-    #sheet { margin:0; gap:0; display:block; }
-    .label { border:0; page-break-after:always; break-after:page; }
-    .label:last-child { page-break-after:auto; break-after:auto; }
+    #sheet { margin:0; }
+    #sheet.roll { display:block; gap:0; }
+    #sheet.roll .label { border:0; page-break-after:always; break-after:page; }
+    #sheet.roll .label:last-child { page-break-after:auto; break-after:auto; }
+    #sheet.sheet { display:grid; grid-template-columns:repeat(10, 20mm); gap:0; }
+    #sheet.sheet .label { border:0; break-inside:avoid; }
   }
 </style>
 </head>
@@ -52,6 +56,12 @@
     <label>Сколько наклеек
       <input id="count" type="number" min="1" max="50" value="1">
     </label>
+    <label>Какой принтер
+      <select id="mode">
+        <option value="roll">Рулон наклеек (по одной на страницу)</option>
+        <option value="sheet">Лист A4 (сетка 10 × 4)</option>
+      </select>
+    </label>
     <div class="err" id="err" role="alert"></div>
     <div class="btns">
       <button type="button" id="make">Сформировать</button>
@@ -67,6 +77,19 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var sheet = $("sheet"), err = $("err");
+  var modeSel = $("mode");
+  var pageStyle = document.createElement("style");
+  document.head.appendChild(pageStyle);
+  function applyMode(m) {
+    sheet.className = m;
+    pageStyle.textContent = m === "sheet" ? "@page { size: A4; margin: 5mm; }" : "@page { size: 20mm 60mm; margin: 0; }";
+    try { localStorage.setItem("granite.printMode", m); } catch (e) {}
+  }
+  var savedMode = null;
+  try { savedMode = localStorage.getItem("granite.printMode"); } catch (e) {}
+  modeSel.value = savedMode === "sheet" ? "sheet" : "roll";
+  applyMode(modeSel.value);
+  modeSel.addEventListener("change", function () { applyMode(modeSel.value); });
 
   // Тот же счётчик, что в приложении (granite.seq), чтобы номера не повторялись
   function takeCodes(n) {
