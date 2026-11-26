@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Печать QR-наклеек</title>
+<style>
+  body { margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; background:#f4f1ea; color:#1d1d1f; }
+  .wrap { max-width:760px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:1.3rem; margin:0 0 6px; }
+  .note { font-size:.9rem; color:#555; margin:0 0 16px; line-height:1.5; }
+  form { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; background:#fff; border:1px solid #ddd; border-radius:14px; padding:16px; }
+  form label { display:flex; flex-direction:column; gap:4px; font-size:.85rem; font-weight:600; }
+  form label.full { grid-column:1 / -1; }
+  input { font:inherit; font-size:1rem; padding:9px 10px; border:1px solid #bbb; border-radius:10px; }
+  .btns { grid-column:1 / -1; display:flex; gap:10px; flex-wrap:wrap; }
+  button { font:inherit; font-weight:700; padding:11px 18px; border-radius:12px; border:1px solid #8a6a2e; background:linear-gradient(180deg,#b38d4f,#8a6a2e); color:#fff; cursor:pointer; }
+  button.secondary { background:#fff; color:#8a6a2e; }
+  .err { color:#b3261e; font-size:.9rem; grid-column:1 / -1; min-height:1em; }
+  #sheet { margin-top:18px; display:flex; flex-wrap:wrap; gap:12px; }
+  .label { width:20mm; height:60mm; background:#fff; border:1px dashed #bbb; box-sizing:border-box; padding:1.5mm; display:flex; flex-direction:column; align-items:center; overflow:hidden; }
+  .label .qr { width:18mm; height:18mm; }
+  .label .qr img, .label .qr canvas { width:18mm !important; height:18mm !important; }
+  .label .code { font-weight:800; font-size:3.6mm; margin-top:1mm; letter-spacing:.2mm; }
+  .label .txt { font-size:2.4mm; line-height:1.25; text-align:center; word-break:break-word; margin-top:.8mm; }
+  @page { size: 20mm 60mm; margin: 0; }
+  @media print {
+    body { background:#fff; }
+    .wrap > *:not(#sheet) { display:none !important; }
+    .wrap { padding:0; max-width:none; }
+    #sheet { margin:0; gap:0; display:block; }
+    .label { border:0; page-break-after:always; break-after:page; }
+    .label:last-child { page-break-after:auto; break-after:auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Печать QR-наклеек</h1>
+  <p class="note">Наклейка 20 × 60 мм, QR 18 мм. Печатайте в масштабе 100 %, без «По размеру страницы». Номера S-001… берутся из счётчика приложения, поэтому повторов не будет. В QR записан только номер куска.</p>
+
+  <form id="f">
+    <label class="full">Название камня (необязательно)
+      <input id="name" type="text" maxlength="60" placeholder="Например: Silestone Raw G 3CM">
+    </label>
+    <label>Размер, дюймы (необязательно)
+      <input id="size" type="text" maxlength="20" placeholder="126 × 36">
+    </label>
+    <label>Ячейка (необязательно)
+      <input id="cell" type="text" maxlength="12" placeholder="A-01">
+    </label>
+    <label>Сколько наклеек
+      <input id="count" type="number" min="1" max="50" value="1">
+    </label>
+    <div class="err" id="err" role="alert"></div>
+    <div class="btns">
+      <button type="button" id="make">Сформировать</button>
+      <button type="button" class="secondary" id="print">Печатать</button>
+    </div>
+  </form>
+
+  <div id="sheet"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var sheet = $("sheet"), err = $("err");
+
+  // Тот же счётчик, что в приложении (granite.seq), чтобы номера не повторялись
+  function takeCodes(n) {
+    var start = 0;
+    try { start = parseInt(localStorage.getItem("granite.seq") || "0", 10) || 0; } catch (e) { start = 0; }
+    var codes = [];
+    for (var i = 1; i <= n; i++) codes.push("S-" + String(start + i).padStart(3, "0"));
+    try { localStorage.setItem("granite.seq", String(start + n)); } catch (e) { return null; }
+    return codes;
+  }
+
+  function makeLabel(code, name, size, cell) {
+    var box = document.createElement("div");
+    box.className = "label";
+    var qr = document.createElement("div");
+    qr.className = "qr";
+    box.appendChild(qr);
+    var c = document.createElement("div");
+    c.className = "code";
+    c.textContent = code;
+    box.appendChild(c);
+    var lines = [name, size ? size + " in" : "", cell ? "яч. " + cell : ""].filter(Boolean);
+    if (lines.length) {
+      var t = document.createElement("div");
+      t.className = "txt";
+      t.textContent = lines.join("\n");
+      t.style.whiteSpace = "pre-line";
+      box.appendChild(t);
+    }
+    if (window.QRCode) {
+      new QRCode(qr, { text: code, width: 68, height: 68, correctLevel: QRCode.CorrectLevel.M });
+    }
+    return box;
+  }
+
+  $("make").addEventListener("click", function () {
+    err.textContent = "";
+    var n = parseInt($("count").value, 10);
+    if (!n || n < 1 || n > 50) { err.textContent = "Введите число от 1 до 50."; return; }
+    var codes = takeCodes(n);
+    if (!codes) { err.textContent = "Не удалось сохранить счётчик номеров. Проверьте настройки браузера."; return; }
+    var name = $("name").value.trim(), size = $("size").value.trim(), cell = $("cell").value.trim();
+    sheet.innerHTML = "";
+    codes.forEach(function (c) { sheet.appendChild(makeLabel(c, name, size, cell)); });
+  });
+
+  $("print").addEventListener("click", function () {
+    if (!sheet.children.length) { err.textContent = "Сначала сформируйте наклейки."; return; }
+    window.print();
+  });
+})();
+</script>
+</body>
+</html>
