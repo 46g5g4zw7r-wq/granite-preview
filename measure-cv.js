@@ -64,10 +64,14 @@
     var scale = maxSide / Math.max(spanX, spanY); // пикселей на мм
     var T = [scale, 0, -minX * scale, 0, scale, -minY * scale, 0, 0, 1];
     var M = mul3(T, h);
-    var Mm = cv.matFromArray(3, 3, cv.CV_64F, M), out = new cv.Mat();
+    var Mm = cv.matFromArray(3, 3, cv.CV_64F, M), out = new cv.Mat(), rgba = new cv.Mat();
     var outW = Math.max(1, Math.round(spanX * scale)), outH = Math.max(1, Math.round(spanY * scale));
-    cv.warpPerspective(mat, out, Mm, new cv.Size(outW, outH), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(0, 0, 0, 255));
-    Mm.delete();
+    // Всегда RGBA с непрозрачным снимком: поле за краем кадра получается прозрачным (alpha 0)
+    if (mat.channels() === 4) { mat.copyTo(rgba); var ad = rgba.data; for (var ai = 3; ai < ad.length; ai += 4) ad[ai] = 255; }
+    else if (mat.channels() === 3) cv.cvtColor(mat, rgba, cv.COLOR_RGB2RGBA);
+    else cv.cvtColor(mat, rgba, cv.COLOR_GRAY2RGBA);
+    cv.warpPerspective(rgba, out, Mm, new cv.Size(outW, outH), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(0, 0, 0, 0));
+    Mm.delete(); rgba.delete();
     var q = corners.map(function (p) { return applyH(M, p); });
     return { mat: out, mmPerPx: 1 / scale, markerQuad: q, H: M };
   }
@@ -102,14 +106,14 @@
       mask = new cv.Mat(h, w, cv.CV_8UC1, new cv.Scalar(cv.GC_PR_FGD));
       // Фон: полоса вдоль настоящего края снимка (после выпрямления края косые) и чёрные поля за кадром
       var band = Math.max(2, Math.round(Math.min(w, h) * 0.03));
-      var gray = new cv.Mat(), valid = new cv.Mat(), inner = new cv.Mat();
-      cv.cvtColor(rgb, gray, cv.COLOR_RGB2GRAY);
-      cv.threshold(gray, valid, 2, 255, cv.THRESH_BINARY);
+      var valid = new cv.Mat(h, w, cv.CV_8UC1), inner = new cv.Mat();
+      if (small.channels() === 4) { var sd = small.data; for (var vi = 0; vi < w * h; vi++) valid.data[vi] = sd[vi * 4 + 3] > 200 ? 255 : 0; }
+      else valid.setTo(new cv.Scalar(255));
       var ek = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(band * 2 + 1, band * 2 + 1));
       cv.erode(valid, inner, ek, new cv.Point(-1, -1), 1, cv.BORDER_CONSTANT, new cv.Scalar(0));
       ek.delete();
       for (var i = 0; i < inner.data.length; i++) if (!inner.data[i]) mask.data[i] = cv.GC_BGD;
-      gray.delete(); valid.delete(); inner.delete();
+      valid.delete(); inner.delete();
       var q = markerQuad.map(function (p) { return [p[0] * k, p[1] * k]; });
       var mcx = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4, mcy = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4;
       var qq = q.map(function (p) { return [Math.round(mcx + (p[0] - mcx) * 1.2), Math.round(mcy + (p[1] - mcy) * 1.2)]; });
@@ -122,6 +126,10 @@
       for (var j = 0; j < mask.data.length; j++) fg.data[j] = (mask.data[j] === cv.GC_FGD || mask.data[j] === cv.GC_PR_FGD) ? 255 : 0;
       var kern = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(5, 5));
       cv.morphologyEx(fg, fg, cv.MORPH_OPEN, kern); kern.delete();
+      // Маркер с белой рамкой лежит на камне: рамка не должна отрезать его от куска
+      var qq2 = q.map(function (p) { return [Math.round(mcx + (p[0] - mcx) * 1.5), Math.round(mcy + (p[1] - mcy) * 1.5)]; });
+      var qm2 = cv.matFromArray(4, 1, cv.CV_32SC2, [].concat.apply([], qq2)), qv2 = new cv.MatVector();
+      qv2.push_back(qm2); cv.fillPoly(fg, qv2, new cv.Scalar(255)); qm2.delete(); qv2.delete();
       cv.connectedComponentsWithStats(fg, labels, stats, cents, 8, cv.CV_32S);
       var lab = labels.data32S[Math.min(h - 1, Math.max(0, Math.round(mcy))) * w + Math.min(w - 1, Math.max(0, Math.round(mcx)))];
       var markerArea = Math.abs((q[1][0] - q[0][0]) * (q[3][1] - q[0][1]));
@@ -142,6 +150,7 @@
       approx.delete(); big.delete();
       return pts.length >= 3 ? pts : fallbackRect(markerQuad, W, H);
     } catch (e) {
+      api.lastError = String(e && e.message || e);
       return fallbackRect(markerQuad, W, H);
     } finally {
       [small, rgb, mask, bgd, fgd, fg, labels, stats, cents, comp, contours, hier].forEach(function (m) { if (m && m.delete) try { m.delete(); } catch (e) {} });
