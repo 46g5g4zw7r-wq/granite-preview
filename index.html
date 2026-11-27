@@ -168,6 +168,11 @@ body.login-open .center{z-index:60}
 .login input.fld:focus{border-color:var(--gold-light);box-shadow:0 0 0 3px rgba(179,141,79,.25)}
 .login label{margin-bottom:12px}
 .forgot{margin:-2px 0 0;text-align:right}
+.login [hidden],.sections[hidden]{display:none!important}
+.sections{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;pointer-events:auto}
+.sections .enter{min-width:120px}
+.note-mode{margin:0;font-size:.85rem;color:#f3dca8;min-height:0}
+.note-mode:empty{display:none}
 .linkbtn{font:inherit;font-size:.82rem;color:#e7dcc6;background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .linkbtn:hover{color:#fff}
 
@@ -244,21 +249,36 @@ body.login-open .center{z-index:60}
     <h2 class="title ctitle" id="companyTitle" hidden></h2>
     <p class="tag" id="tag"></p>
     <div class="line"><i></i></div>
-    <button type="button" class="enter" id="enterBtn">Войти</button>
-    <button type="button" class="linkbtn" id="demoBtn" style="pointer-events:auto;font-size:.9rem"></button>
+    <div class="sections" id="sections">
+      <button type="button" class="enter" id="goOffice">Офис</button>
+      <button type="button" class="enter" id="goAdmin">Админ</button>
+      <button type="button" class="enter" id="goShop">Цех</button>
+    </div>
     <a class="support" id="supportLink" href="mailto:support@slabwise.ca"><span><span id="supportLabel">Поддержка</span>: support@slabwise.ca</span></a>
     <section class="login" id="login" role="dialog" aria-labelledby="loginTitle" aria-modal="false">
       <form id="loginForm" autocomplete="off">
         <h2 id="loginTitle">Вход</h2>
-        <label for="email"><span id="emailLabel">E-mail</span>
+        <label for="email" id="emailRow"><span id="emailLabel">E-mail</span>
           <input id="email" name="email" type="email" autocomplete="username" class="fld">
         </label>
-        <label for="pw"><span id="pwLabel">Пароль</span>
+        <label for="pw" id="pwRow"><span id="pwLabel">Пароль</span>
           <span class="pwrow">
             <input id="pw" name="pw" type="password" autocomplete="off">
             <button type="button" class="lbtn" id="showPw">Показать</button>
           </span>
         </label>
+        <label for="pw2" id="pw2Row" hidden><span id="pw2Label">Повторите пароль</span>
+          <input id="pw2" name="pw2" type="password" autocomplete="new-password">
+        </label>
+        <div id="chgRows" hidden>
+          <label for="newPw"><span id="newPwLabel">Новый пароль</span>
+            <input id="newPw" name="newPw" type="password" autocomplete="new-password">
+          </label>
+          <label for="newPw2"><span id="newPw2Label">Повторите новый пароль</span>
+            <input id="newPw2" name="newPw2" type="password" autocomplete="new-password">
+          </label>
+        </div>
+        <p class="note-mode" id="modeNote"></p>
         <p class="forgot"><button type="button" class="linkbtn" id="forgotBtn">Забыли пароль?</button></p>
         <p class="err" id="err" role="alert"></p>
         <div class="btns">
@@ -272,6 +292,7 @@ body.login-open .center{z-index:60}
   <p class="hint" id="hint"></p>
 </main>
 
+<script src="auth.js"></script>
 <script>
 (function () {
   var PHOTOS = Array.apply(null, Array(27)).map(function (_, i) { return i + 1; }).map(function (n) { return "url(img/s" + n + ".jpg)"; });
@@ -576,9 +597,40 @@ body.login-open .center{z-index:60}
           empty: "Enter the password.", wrong: "Wrong password. Try again.",
           demo: "Preview: password check is not connected yet.", forgot: "Forgot password?" }
   };
-  var enterBtn = document.getElementById("enterBtn");
-  var demoBtn = document.getElementById("demoBtn");
-  demoBtn.addEventListener("click", function () { window.location.href = "app.html"; });
+  // Разделы и подписи формы входа (4 языка)
+  var SEC = {
+    ru: { office: "Офис", admin: "Админ", shop: "Цех", pw2: "Повторите пароль", newPw: "Новый пароль", newPw2: "Повторите новый пароль",
+          firstAdmin: "Первый вход администратора: придумайте пароль (не меньше 8 символов).",
+          mustChange: "Это временный пароль от администратора. Придумайте свой (не меньше 8 символов).",
+          other: "Ваш раздел — {s}. Войдите через кнопку «{s}».", wrongCred: "Неверный e-mail или пароль.",
+          short: "Пароль должен быть не короче 8 символов.", mismatch: "Пароли не совпадают.", wait: "Проверяю…",
+          proto: "Прототип: учётные записи хранятся только в этом браузере.",
+          forgot: "Сброс пароля по e-mail появится после подключения Supabase. Пока обратитесь к администратору." },
+    fr: { office: "Bureau", admin: "Admin", shop: "Atelier", pw2: "Répétez le mot de passe", newPw: "Nouveau mot de passe", newPw2: "Répétez le nouveau mot de passe",
+          firstAdmin: "Première connexion de l’administrateur : choisissez un mot de passe (8 caractères minimum).",
+          mustChange: "C’est un mot de passe temporaire de l’administrateur. Choisissez le vôtre (8 caractères minimum).",
+          other: "Votre section : {s}. Connectez-vous avec le bouton « {s} ».", wrongCred: "E-mail ou mot de passe incorrect.",
+          short: "Le mot de passe doit contenir au moins 8 caractères.", mismatch: "Les mots de passe ne correspondent pas.", wait: "Vérification…",
+          proto: "Prototype : les comptes sont enregistrés uniquement dans ce navigateur.",
+          forgot: "La réinitialisation par e-mail arrivera avec Supabase. En attendant, contactez l’administrateur." },
+    en: { office: "Office", admin: "Admin", shop: "Shop floor", pw2: "Repeat password", newPw: "New password", newPw2: "Repeat new password",
+          firstAdmin: "First administrator sign-in: choose a password (at least 8 characters).",
+          mustChange: "This is a temporary password from the administrator. Choose your own (at least 8 characters).",
+          other: "Your section is {s}. Sign in with the “{s}” button.", wrongCred: "Wrong e-mail or password.",
+          short: "The password must be at least 8 characters.", mismatch: "Passwords do not match.", wait: "Checking…",
+          proto: "Prototype: accounts are stored only in this browser.",
+          forgot: "Password reset by e-mail comes with Supabase. For now, ask the administrator." },
+    es: { office: "Oficina", admin: "Admin", shop: "Taller", pw2: "Repita la contraseña", newPw: "Contraseña nueva", newPw2: "Repita la contraseña nueva",
+          firstAdmin: "Primer acceso del administrador: elija una contraseña (mínimo 8 caracteres).",
+          mustChange: "Es una contraseña temporal del administrador. Elija la suya (mínimo 8 caracteres).",
+          other: "Su sección es {s}. Entre con el botón «{s}».", wrongCred: "E-mail o contraseña incorrectos.",
+          short: "La contraseña debe tener al menos 8 caracteres.", mismatch: "Las contraseñas no coinciden.", wait: "Comprobando…",
+          proto: "Prototipo: las cuentas se guardan solo en este navegador.",
+          forgot: "El restablecimiento por e-mail llegará con Supabase. Mientras tanto, consulte al administrador." }
+  };
+  // Главная — всегда с чистого листа: вернулся сюда — вышел из раздела (общий компьютер в офисе)
+  if (window.SlabAuth) window.SlabAuth.logout();
+  var sectionsEl = document.getElementById("sections");
   var loginBox = document.getElementById("login");
   var loginForm = document.getElementById("loginForm");
   var pwInput = document.getElementById("pw");
@@ -587,43 +639,63 @@ body.login-open .center{z-index:60}
   var submitBtn = document.getElementById("submitBtn");
   var errEl = document.getElementById("err");
   var currentLang = "ru";
+  var cur = { section: null, mode: "in", email: "", pw: "" };
+  function S() { return SEC[currentLang] || SEC.ru; }
+  function $(id) { return document.getElementById(id); }
 
   function applyLogin(code) {
     currentLang = LOGIN[code] ? code : "ru";
-    var L = LOGIN[currentLang];
-    enterBtn.textContent = L.enter;
+    var L = LOGIN[currentLang], T = S();
+    $("goOffice").textContent = T.office; $("goAdmin").textContent = T.admin; $("goShop").textContent = T.shop;
     var company = getCompany();
-    document.getElementById("loginTitle").textContent = company ? L.title + " · " + company : L.title;
-    document.getElementById("pwLabel").textContent = L.pw;
+    var head = cur.section ? L.title + " · " + T[cur.section] : L.title;
+    $("loginTitle").textContent = company ? head + " · " + company : head;
+    $("pwLabel").textContent = L.pw;
+    $("pw2Label").textContent = T.pw2; $("newPwLabel").textContent = T.newPw; $("newPw2Label").textContent = T.newPw2;
     showBtn.textContent = pwInput.type === "text" ? L.hide : L.show;
     cancelBtn.textContent = L.back;
     submitBtn.textContent = L.submit;
-    document.getElementById("demoNote").textContent = L.demo;
-    document.getElementById("emailLabel").textContent = L.email;
-    document.getElementById("forgotBtn").textContent = L.forgot || "Забыли пароль?";
+    $("demoNote").textContent = T.proto;
+    $("emailLabel").textContent = L.email;
+    $("forgotBtn").textContent = L.forgot || "Забыли пароль?";
+    $("modeNote").textContent = cur.mode === "setAdmin" ? T.firstAdmin : cur.mode === "change" ? T.mustChange : "";
     errEl.textContent = "";
   }
 
-  function openLogin() {
-    loginBox.classList.add("open");
-    enterBtn.hidden = true;
-    demoBtn.hidden = true;
-    document.getElementById("supportLink").hidden = true;
-    document.body.classList.add("login-open");
-    setTimeout(function () { pwInput.focus(); }, 60);
-  }
-  function closeLogin() {
-    loginBox.classList.remove("open");
-    enterBtn.hidden = false;
-    demoBtn.hidden = false;
-    document.getElementById("supportLink").hidden = false;
-    document.body.classList.remove("login-open");
-    pwInput.value = "";
-    pwInput.type = "password";
+  function setMode(mode) {
+    cur.mode = mode;
+    var admin = cur.section === "admin";
+    $("emailRow").hidden = admin || mode === "change";
+    $("pwRow").hidden = mode === "change";
+    $("pw2Row").hidden = mode !== "setAdmin";
+    $("chgRows").hidden = mode !== "change";
+    $("forgotBtn").parentNode.hidden = mode !== "in";
     applyLogin(currentLang);
   }
 
-  enterBtn.addEventListener("click", openLogin);
+  function openLogin(section) {
+    cur = { section: section, mode: "in", email: "", pw: "" };
+    setMode(section === "admin" && !window.SlabAuth.adminSet() ? "setAdmin" : "in");
+    loginBox.classList.add("open");
+    sectionsEl.hidden = true;
+    document.getElementById("supportLink").hidden = true;
+    document.body.classList.add("login-open");
+    setTimeout(function () { (section === "admin" ? pwInput : $("email")).focus(); }, 60);
+  }
+  function closeLogin() {
+    loginBox.classList.remove("open");
+    sectionsEl.hidden = false;
+    document.getElementById("supportLink").hidden = false;
+    document.body.classList.remove("login-open");
+    ["pw", "pw2", "newPw", "newPw2"].forEach(function (id) { $(id).value = ""; });
+    pwInput.type = "password";
+    cur = { section: null, mode: "in", email: "", pw: "" };
+    setMode("in");
+  }
+
+  $("goOffice").addEventListener("click", function () { openLogin("office"); });
+  $("goAdmin").addEventListener("click", function () { openLogin("admin"); });
+  $("goShop").addEventListener("click", function () { openLogin("shop"); });
   cancelBtn.addEventListener("click", closeLogin);
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && loginBox.classList.contains("open")) closeLogin();
@@ -633,26 +705,48 @@ body.login-open .center{z-index:60}
     showBtn.textContent = pwInput.type === "text" ? LOGIN[currentLang].hide : LOGIN[currentLang].show;
     pwInput.focus();
   });
-  document.getElementById("forgotBtn").addEventListener("click", function () {
-    errEl.textContent = LOGIN[currentLang].forgotNote;
-  });
+  $("forgotBtn").addEventListener("click", function () { errEl.textContent = S().forgot; });
+
+  function shake() {
+    loginBox.classList.remove("shake"); void loginBox.offsetWidth; loginBox.classList.add("shake");
+  }
+  function fail(msg) { errEl.textContent = msg; submitBtn.disabled = false; shake(); }
+  function go(section) { window.location.href = "app.html?s=" + section; }
+
   loginForm.addEventListener("submit", function (e) {
     e.preventDefault();
-    var L = LOGIN[currentLang];
-    // Пароль здесь не проверяется и никуда не уходит: это превью интерфейса
-    var mail = document.getElementById("email").value.trim();
-    if (!mail) { errEl.textContent = L.emailEmpty; }
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { errEl.textContent = L.emailBad; }
-    else if (!pwInput.value) { errEl.textContent = L.empty; }
-    else {
-      // Превью: проверки пароля нет, при корректном e-mail открываем экран склада
-      window.location.href = "app.html";
+    var L = LOGIN[currentLang], T = S(), A = window.SlabAuth;
+    if (!A || !(window.crypto && crypto.subtle)) { errEl.textContent = T.wrongCred; return; }
+    if (cur.mode === "setAdmin") {
+      if (pwInput.value.length < A.MIN_PW) return fail(T.short);
+      if (pwInput.value !== $("pw2").value) return fail(T.mismatch);
+      submitBtn.disabled = true; errEl.textContent = T.wait;
+      A.setAdminPw(pwInput.value).then(function () { go("admin"); }, function () { fail(T.short); });
       return;
     }
-    loginBox.classList.remove("shake");
-    void loginBox.offsetWidth;
-    loginBox.classList.add("shake");
-    pwInput.focus();
+    if (cur.mode === "change") {
+      var np = $("newPw").value;
+      if (np.length < A.MIN_PW) return fail(T.short);
+      if (np !== $("newPw2").value) return fail(T.mismatch);
+      submitBtn.disabled = true; errEl.textContent = T.wait;
+      A.changePw(cur.email, cur.pw, np).then(function (r) { if (r.ok) go(r.section); else fail(T.wrongCred); });
+      return;
+    }
+    var mail = cur.section === "admin" ? "" : $("email").value.trim();
+    if (cur.section !== "admin") {
+      if (!mail) return fail(L.emailEmpty);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return fail(L.emailBad);
+    }
+    if (!pwInput.value) return fail(L.empty);
+    submitBtn.disabled = true; errEl.textContent = T.wait;
+    A.login(cur.section, mail, pwInput.value).then(function (r) {
+      submitBtn.disabled = false; errEl.textContent = "";
+      if (r.ok) return go(r.section);
+      if (r.mustChange) { cur.email = mail; cur.pw = pwInput.value; setMode("change"); setTimeout(function () { $("newPw").focus(); }, 30); return; }
+      if (r.reason === "section") return fail(T.other.split("{s}").join(T[r.section]));
+      if (r.reason === "admin_unset") { setMode("setAdmin"); return; }
+      fail(T.wrongCred);
+    });
   });
 
   /* ---------- Язык ---------- */
@@ -708,7 +802,6 @@ body.login-open .center{z-index:60}
     tagEl.textContent = DICT[code].tag;
     hintEl.textContent = DICT[code].hint;
     renderTicker(DICT[code].ticker);
-    demoBtn.textContent = DICT[code].demo;
     document.getElementById("supportLabel").textContent = DICT[code].support;
     applyLogin(code);
     Array.prototype.forEach.call(buttons, function (b) {
