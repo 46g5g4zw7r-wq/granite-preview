@@ -60,10 +60,21 @@
     var s = session(); if (s && s.email === e) logout();
   }
 
+  // Админ выдаёт новый временный пароль (сотрудник забыл свой или не успел войти)
+  function resetTempPw(email, pw) {
+    var person = find(email);
+    if (!person) return Promise.reject(new Error("nouser"));
+    if (String(pw || "").length < MIN_PW) return Promise.reject(new Error("short"));
+    return record(pw, true).then(function (rec) { var pws = read(ls, PW_KEY, {}); pws[person.email] = rec; write(ls, PW_KEY, pws); });
+  }
   function adminSet() { return !!read(ls, ADMIN_KEY, null); }
   function setAdminPw(pw) {
     if (String(pw || "").length < MIN_PW) return Promise.reject(new Error("short"));
-    return record(pw, false).then(function (rec) { write(ls, ADMIN_KEY, rec); write(ss, SES_KEY, { section: "admin", admin: true, email: "", name: "" }); });
+    return record(pw, false).then(function (rec) {
+      write(ls, ADMIN_KEY, rec); write(ss, SES_KEY, { section: "admin", admin: true, email: "", name: "" });
+      // Пробный период компании начинается с первого входа администратора
+      try { if (!ls().getItem("granite.trialStart")) ls().setItem("granite.trialStart", String(Date.now())); } catch (e) {}
+    });
   }
 
   function login(section, email, pw) {
@@ -115,7 +126,7 @@
   }
 
   var api = { SECTIONS: SECTIONS, MIN_PW: MIN_PW, hashPw: hashPw, randomSalt: randomSalt, staff: staff, addStaff: addStaff,
-    removeStaff: removeStaff, login: login, setAdminPw: setAdminPw, adminSet: adminSet, changePw: changePw,
+    removeStaff: removeStaff, resetTempPw: resetTempPw, login: login, setAdminPw: setAdminPw, adminSet: adminSet, changePw: changePw,
     session: session, logout: logout, can: can };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.SlabAuth = api;
 })(typeof window !== "undefined" ? window : globalThis);

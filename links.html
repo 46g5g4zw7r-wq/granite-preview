@@ -2,7 +2,7 @@
 <html lang="en" translate="no">
 <head>
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
 
@@ -21,8 +21,8 @@
   .plate { position:absolute; left:50%; top:50%; width:var(--w,180px); height:var(--h,110px); margin:calc(var(--h,110px) / -2) 0 0 calc(var(--w,180px) / -2); transform-style:preserve-3d; animation: float var(--t,22s) ease-in-out infinite alternate; animation-delay: var(--delay,0s); }
   .plate .face { position:absolute; inset:0; border-radius:8px; overflow:hidden; backface-visibility:hidden; box-shadow: 0 14px 30px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,240,210,.18); background-color:#2a2622; background-size:cover; background-position:center; }
   .plate .face.back { transform: rotateY(180deg); }
-  .plate.ph-u .face { background-image:url("https://images.unsplash.com/photo-1733085097233-66441dedba94?fm=jpg&q=60&w=900&auto=format&fit=crop"); }
-  .plate.ph-p .face { background-image:url("https://images.pexels.com/photos/5506219/pexels-photo-5506219.jpeg?auto=compress&cs=tinysrgb&w=900"); }
+  .plate.ph-u .face { background-image:url("img/s14.jpg"); }
+  .plate.ph-p .face { background-image:url("img/s21.jpg"); }
   @keyframes float {
     0%   { transform: translate3d(-30vw,-14vh,-200px) rotateX(8deg) rotateY(-14deg); }
     50%  { transform: translate3d(26vw,10vh,-160px) rotateX(-6deg) rotateY(12deg); }
@@ -74,7 +74,6 @@
   <a class="btn alt" id="worker" href="worker.html"></a>
   <a class="btn light" id="print" href="print.html"></a>
   <small id="foot"></small>
-  <small class="credit">Photos: Akbar Nemati (Unsplash), Olga V (Pexels)</small>
 </div>
 <script>
 (function () {

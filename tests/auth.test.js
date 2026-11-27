@@ -84,6 +84,27 @@ test("new password must differ from the temporary one", async function () {
   assert.strictEqual(r.ok, false); assert.strictEqual(r.reason, "same");
 });
 
+test("admin resets a temporary password; old password stops working, new temp forces change", async function () {
+  reset();
+  await A.addStaff({ name: "Оля", position: "", email: "olya@x.ca", shift: "", section: "office", tempPw: "temp12345" });
+  await A.changePw("olya@x.ca", "temp12345", "olyapass1"); A.logout();
+  await A.resetTempPw("olya@x.ca", "fresh1234");
+  assert.strictEqual((await A.login("office", "olya@x.ca", "olyapass1")).reason, "wrong");
+  assert.strictEqual((await A.login("office", "olya@x.ca", "fresh1234")).mustChange, true);
+  await assert.rejects(A.resetTempPw("olya@x.ca", "short"));
+  await assert.rejects(A.resetTempPw("nobody@x.ca", "fresh1234"));
+});
+
+test("trial starts at the admin's first sign-in and is not reset later", async function () {
+  reset();
+  assert.strictEqual(localStorage.getItem("granite.trialStart"), null);
+  await A.setAdminPw("adminpass1");
+  var t = localStorage.getItem("granite.trialStart"); assert.ok(t && +t > 0, "not set");
+  localStorage.setItem("granite.trialStart", "1000");
+  await A.setAdminPw("adminpass2");
+  assert.strictEqual(localStorage.getItem("granite.trialStart"), "1000");
+});
+
 (async function () {
   var fails = 0;
   for (var t of tests) { try { await t[1](); console.log("PASS", t[0]); } catch (e) { fails++; console.log("FAIL", t[0], "-", e.message); } }

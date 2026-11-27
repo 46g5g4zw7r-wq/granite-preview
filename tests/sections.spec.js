@@ -20,6 +20,8 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
     await p.click('#langs button[data-lang="' + (lang || "ru") + '"], .lang button[data-lang="' + (lang || "ru") + '"]');
   }
   async function signIn(btn, email, pw) {
+    await p.waitForLoadState("load");
+    await p.waitForFunction(function () { return !!window.SlabAuth && !!document.getElementById("goShop"); });
     await p.click(btn); await p.waitForSelector("#login.open");
     if (email !== null) await p.fill("#email", email);
     await p.fill("#pw", pw);
@@ -175,6 +177,43 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
       await p.goto(B + "app.html?s=shop"); await p.waitForTimeout(400);
       assert.ok(!(await p.isVisible("#shopAdd")) && !(await p.isVisible("#shopMeasure")), "shop can still add after trial");
       await p.evaluate(function () { localStorage.setItem("granite.trialStart", String(Date.now())); });
+    });
+  }
+
+  if (!ONLY_HOME) {
+    await step("staff tab and view share one name; messages follow the language", async function () {
+      await p.goto(B + "app.html?s=admin"); await p.waitForTimeout(300);
+      await p.click('.lang button[data-lang="ru"]');
+      var tab = (await p.$$eval("#tabs .tab", function (t) { return t[4].textContent; })).trim();
+      var title = (await p.textContent("#view .view-title")).trim();
+      assert.strictEqual(tab, title, "tab '" + tab + "' vs title '" + title + "'");
+      await p.fill("#sfName", "Петя"); await p.fill("#sfEmail", "petya@x.ca"); await p.fill("#sfPw", "temp12345");
+      await p.click("#sfAdd"); await p.waitForFunction(function () { return /Петя/.test(document.getElementById("sfMsg").textContent); }, null, { timeout: 30000 });
+      await p.click('.lang button[data-lang="en"]');
+      assert.ok(/Added/.test(await p.textContent("#sfMsg")), "staff message not translated: " + await p.textContent("#sfMsg"));
+      await p.click('.lang button[data-lang="ru"]');
+    });
+
+    await step("admin can reset an employee's temporary password from the staff list", async function () {
+      await p.click('#view [data-reset="petya@x.ca"]');
+      await p.waitForSelector("#resetPw", { timeout: 3000 });
+      await p.fill("#resetPw", "again1234"); await p.click("#resetOk");
+      await p.waitForFunction(function () { return /временный пароль для Петя сохранён/.test(document.getElementById("sfMsg").textContent); }, null, { timeout: 30000 });
+      var r = await p.evaluate(function () { return window.SlabAuth.login("shop", "petya@x.ca", "again1234"); });
+      assert.strictEqual(r.mustChange, true, JSON.stringify(r));
+    });
+
+    await step("admin check-in on the worker page uses the translated admin name", async function () {
+      await p.click('.lang button[data-lang="en"]');
+      await p.goto(B + "worker.html"); await p.waitForTimeout(300);
+      var t = await p.evaluate(function () { return document.body.innerText; });
+      assert.ok(t.indexOf("Админ") < 0, "untranslated 'Админ' on an English page");
+      await p.goto(B + "app.html?s=admin"); await p.click('.lang button[data-lang="ru"]');
+    });
+
+    await step("links page uses only own photos", async function () {
+      var s = require("fs").readFileSync(path.resolve(__dirname, "../links.html"), "utf8");
+      assert.ok(!/unsplash|pexels/.test(s), "external images still referenced");
     });
   }
 

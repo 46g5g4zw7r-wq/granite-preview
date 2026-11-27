@@ -304,6 +304,7 @@ main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-dire
   Array.prototype.forEach.call(document.querySelectorAll(".lang button"), function (b) {
     b.addEventListener("click", function () {
       lang = b.getAttribute("data-lang");
+      if (me && me.admin) me.name = ADMIN_NAME[lang] || ADMIN_NAME.ru;
       try { localStorage.setItem("granite.lang", lang); } catch (e) {}
       document.getElementById("done").hidden = true;
       renderLang();
@@ -311,10 +312,11 @@ main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-dire
   });
 
   // Если сотрудник уже вошёл в этой вкладке, восстанавливаем его
+  var ADMIN_NAME = { ru: "Админ", fr: "Admin", en: "Admin", es: "Admin" };
   var ses = window.SlabAuth && window.SlabAuth.session();
   var restored = ses && ses.email ? findStaff(ses.email) : null;
   if (restored) { me = restored; showWork(); }
-  else if (ses && ses.admin) { me = { name: "Админ", role: "", email: "" }; showWork(); }
+  else if (ses && ses.admin) { me = { name: ADMIN_NAME[lang] || ADMIN_NAME.ru, role: "", email: "", admin: true }; showWork(); }
   else { window.location.href = "index.html"; }
 })();
 </script>
