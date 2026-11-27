@@ -41,6 +41,14 @@ test("summarize: degenerate input gives finite numbers", function () {
   });
 });
 
+test("selfIntersects: bowtie yes, L-shape and trapezoid no; summarize flags crossing", function () {
+  assert.strictEqual(C.selfIntersects([[0, 0], [100, 100], [100, 0], [0, 100]]), true);
+  assert.strictEqual(C.selfIntersects([[0, 0], [1500, 0], [1500, 400], [600, 400], [600, 900], [0, 900]]), false);
+  assert.strictEqual(C.selfIntersects([[0, 0], [1200, 0], [1000, 600], [0, 600]]), false);
+  assert.strictEqual(C.summarize([[0, 0], [100, 100], [100, 0], [0, 100]]).crossing, true);
+  assert.strictEqual(C.summarize([[0, 0], [100, 0], [100, 50], [0, 50]]).crossing, false);
+});
+
 var fails = 0;
 tests.forEach(function (t) {
   try { t[1](); console.log("PASS", t[0]); } catch (e) { fails++; console.log("FAIL", t[0], "-", e.message); }

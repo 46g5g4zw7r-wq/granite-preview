@@ -101,7 +101,7 @@
     var W = rectMat.cols, H = rectMat.rows;
     var k = Math.min(1, (workSide || 640) / Math.max(W, H));
     var small = new cv.Mat(), rgb = new cv.Mat(), mask = null, bgd = new cv.Mat(), fgd = new cv.Mat();
-    var fg = new cv.Mat(), labels = new cv.Mat(), stats = new cv.Mat(), cents = new cv.Mat(), comp = new cv.Mat();
+    var fg = null, labels = new cv.Mat(), stats = new cv.Mat(), cents = new cv.Mat(), comp = null, valid = null, inner = null, ek = null;
     var contours = new cv.MatVector(), hier = new cv.Mat();
     try {
       cv.resize(rectMat, small, new cv.Size(Math.max(2, Math.round(W * k)), Math.max(2, Math.round(H * k))), 0, 0, cv.INTER_AREA);
@@ -110,14 +110,14 @@
       mask = new cv.Mat(h, w, cv.CV_8UC1, new cv.Scalar(cv.GC_PR_FGD));
       // Фон: полоса вдоль настоящего края снимка (после выпрямления края косые) и чёрные поля за кадром
       var band = Math.max(2, Math.round(Math.min(w, h) * 0.03));
-      var valid = new cv.Mat(h, w, cv.CV_8UC1), inner = new cv.Mat();
+      valid = new cv.Mat(h, w, cv.CV_8UC1); inner = new cv.Mat();
       if (small.channels() === 4) { var sd = small.data; for (var vi = 0; vi < w * h; vi++) valid.data[vi] = sd[vi * 4 + 3] > 200 ? 255 : 0; }
       else valid.setTo(new cv.Scalar(255));
-      var ek = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(band * 2 + 1, band * 2 + 1));
+      ek = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(band * 2 + 1, band * 2 + 1));
       cv.erode(valid, inner, ek, new cv.Point(-1, -1), 1, cv.BORDER_CONSTANT, new cv.Scalar(0));
-      ek.delete();
+      ek.delete(); ek = null;
       for (var i = 0; i < inner.data.length; i++) if (!inner.data[i]) mask.data[i] = cv.GC_BGD;
-      valid.delete(); inner.delete();
+      valid.delete(); inner.delete(); valid = null; inner = null;
       var q = markerQuad.map(function (p) { return [p[0] * k, p[1] * k]; });
       var mcx = (q[0][0] + q[1][0] + q[2][0] + q[3][0]) / 4, mcy = (q[0][1] + q[1][1] + q[2][1] + q[3][1]) / 4;
       var qq = q.map(function (p) { return [Math.round(mcx + (p[0] - mcx) * 1.2), Math.round(mcy + (p[1] - mcy) * 1.2)]; });
@@ -157,7 +157,7 @@
       api.lastError = String(e && e.message || e);
       return fallbackRect(markerQuad, W, H);
     } finally {
-      [small, rgb, mask, bgd, fgd, fg, labels, stats, cents, comp, contours, hier].forEach(function (m) { if (m && m.delete) try { m.delete(); } catch (e) {} });
+      [small, rgb, mask, bgd, fgd, fg, labels, stats, cents, comp, contours, hier, valid, inner, ek].forEach(function (m) { if (m && m.delete) try { m.delete(); } catch (e) {} });
     }
   }
 

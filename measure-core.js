@@ -98,6 +98,22 @@
     return { w: w, h: h, corners: rotate([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], angle) };
   }
 
+  // Пересекаются ли несоседние рёбра (контур «бантиком» — площадь посчиталась бы неверно)
+  function selfIntersects(pts) {
+    var n = pts.length;
+    if (n < 4) return false;
+    function cr(a, b, c) { return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); }
+    function hit(a, b, c, d) {
+      var d1 = cr(c, d, a), d2 = cr(c, d, b), d3 = cr(a, b, c), d4 = cr(a, b, d);
+      return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+    }
+    for (var i = 0; i < n; i++) for (var j = i + 2; j < n; j++) {
+      if (i === 0 && j === n - 1) continue;
+      if (hit(pts[i], pts[(i + 1) % n], pts[j], pts[(j + 1) % n])) return true;
+    }
+    return false;
+  }
+
   function r1(v) { return isFinite(v) ? Math.round(v * 10) / 10 : 0; }
 
   function summarize(ptsMm) {
@@ -109,12 +125,13 @@
       wIn: r1(box.w / MM_PER_IN), hIn: r1(box.h / MM_PER_IN),
       areaFt2: r1(pts.length >= 3 ? polygonArea(pts) / MM2_PER_FT2 : 0),
       innerWIn: r1(iw / MM_PER_IN), innerHIn: r1(ih / MM_PER_IN),
-      inner: inner.corners
+      inner: inner.corners,
+      crossing: selfIntersects(pts)
     };
   }
 
   var api = { polygonArea: polygonArea, convexHull: convexHull, minAreaRect: minAreaRect,
-              largestInscribedRect: largestInscribedRect, summarize: summarize };
+              largestInscribedRect: largestInscribedRect, summarize: summarize, selfIntersects: selfIntersects };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SlabCore = api;
 })(typeof window !== "undefined" ? window : this);

@@ -73,6 +73,41 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
     await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3; }, null, { timeout: 60000 });
   });
 
+  await step("Reset points shows the 'looking…' message before the heavy work", async function () {
+    var shown = await p.evaluate(function () {
+      document.getElementById("msrRetakeSame").click();
+      return document.getElementById("msrMsg").textContent;
+    });
+    assert.strictEqual(shown, await p.evaluate(function () { return window.SlabMeasure._T.en.finding; }));
+    await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3 && document.getElementById("msrMsg").textContent === window.SlabMeasure._T.en.hint; }, null, { timeout: 60000 });
+  });
+
+  await step("crossing outline: warning shown and Done disabled", async function () {
+    await p.evaluate(function () { var st = window.SlabMeasure._state(); var q = st.points; st.setPoints([q[0], q[2], q[1], q[3 % q.length]]); });
+    var w = await p.textContent("#msrWarn");
+    assert.strictEqual(w, await p.evaluate(function () { return window.SlabMeasure._T.en.crossing; }), "warning: " + w);
+    assert.ok(await p.isDisabled("#msrDone"), "Done enabled for a crossing outline");
+    await p.click("#msrRetakeSame");
+    await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3 && !document.getElementById("msrDone").disabled; }, null, { timeout: 60000 });
+  });
+
+  await step("changing the marker size keeps edited points and rescales the numbers", async function () {
+    var h = await p.evaluate(function () { return window.SlabMeasure._state().handleScreen(0); });
+    await p.mouse.move(h[0], h[1]); await p.mouse.down(); await p.mouse.move(h[0] + 30, h[1] + 30, { steps: 4 }); await p.mouse.up();
+    var before = await p.evaluate(function () { return JSON.stringify(window.SlabMeasure._state().points); });
+    var d0 = dims(await p.textContent("#msrDim"));
+    await p.click("#msrMmEdit"); await p.waitForSelector("#msrMmAsk:not([hidden])");
+    await p.fill("#msrMm", "127"); await p.click("#msrMmOk"); await p.waitForTimeout(300);
+    var after = await p.evaluate(function () { return JSON.stringify(window.SlabMeasure._state().points); });
+    assert.strictEqual(after, before, "points changed");
+    var d1 = dims(await p.textContent("#msrDim"));
+    near(d1[0], d0[0] * 1.27, 0.3, "W rescaled"); near(d1[1], d0[1] * 1.27, 0.3, "H rescaled");
+    await p.click("#msrMmEdit"); await p.waitForSelector("#msrMmAsk:not([hidden])");
+    await p.fill("#msrMm", "100"); await p.click("#msrMmOk"); await p.waitForTimeout(300);
+    await p.click("#msrRetakeSame"); // вернуть автоконтур для следующих шагов
+    await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3 && document.getElementById("msrMsg").textContent === window.SlabMeasure._T.en.hint; }, null, { timeout: 60000 });
+  });
+
   await step("language switch while open translates the screen", async function () {
     await p.click('#msr .mlang button[data-lang="es"]');
     assert.ok(await p.evaluate(function () { return document.documentElement.lang === "es"; }), "app language not switched");
@@ -112,6 +147,24 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
     await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3; }, null, { timeout: 60000 });
     var d = dims(await p.textContent("#msrDim")); near(d[0], 59.1, 0.7, "W"); near(d[1], 35.4, 0.7, "H");
     await p.click("#msrCancel");
+  });
+
+  await step("browsers without createImageBitmap: photo still loads and the temporary URL is released", async function () {
+    var p2 = await b.newPage({ viewport: { width: 1200, height: 900 } });
+    await p2.addInitScript(function () {
+      window.__revoked = 0; var r = URL.revokeObjectURL.bind(URL);
+      URL.revokeObjectURL = function (u) { window.__revoked++; return r(u); };
+      delete window.createImageBitmap;
+    });
+    await p2.goto("http://localhost:8766/print.html");
+    await p2.evaluate(function () { sessionStorage.setItem("granite.session", JSON.stringify({ section: "admin", admin: true, email: "", name: "" })); localStorage.setItem("granite.markerMmOk", "1"); });
+    await p2.goto("http://localhost:8766/app.html?s=shop"); await p2.waitForTimeout(400);
+    await p2.click("#shopAdd");
+    await p2.evaluate(function () { document.getElementById("iMeasureFile").value = ""; });
+    await p2.setInputFiles("#iMeasureFile", "/tmp/scene.jpg");
+    await p2.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3; }, null, { timeout: 60000 });
+    assert.ok(await p2.evaluate(function () { return window.__revoked; }) >= 1, "object URL not revoked");
+    await p2.close();
   });
 
   await step("open three times in a row without console errors", async function () {

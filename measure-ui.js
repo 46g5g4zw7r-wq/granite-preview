@@ -14,7 +14,7 @@
       mmAsk: "Один раз: приложи линейку к чёрному квадрату маркера и введи его сторону в миллиметрах.",
       mmLabel: "Сторона чёрного квадрата по линейке, мм", mmBad: "Введи число от 20 до 400.", ok: "OK", mmNow: "Маркер: {mm} мм",
       retake: "Переснять", reset: "Сбросить точки", cancel: "Отмена", del: "− точка", done: "Готово",
-      dim: "Габарит", area: "Площадь", inner: "Самый большой прямоугольник внутри", ft2: "кв. фт", fail: "Не получилось обработать фото. Попробуй ещё раз." },
+      dim: "Габарит", area: "Площадь", inner: "Самый большой прямоугольник внутри", ft2: "кв. фт", crossing: "Линии контура перекрещиваются — площадь будет неверной. Передвинь точки, чтобы контур шёл по краю куска.", fail: "Не получилось обработать фото. Попробуй ещё раз." },
     fr: { title: "Mesure par photo", loading: "Chargement de la reconnaissance… (plus long la première fois)", finding: "Recherche du marqueur et du bord…",
       noMarker: "Marqueur introuvable. Vérifiez : marqueur entier dans l’image, sans reflet, bien plaqué contre la pierre.",
       small: "Le marqueur est petit sur la photo — rapprochez-vous, sinon les dimensions seront moins précises.",
@@ -22,7 +22,7 @@
       mmAsk: "Une seule fois : mesurez à la règle le côté du carré noir du marqueur, en millimètres.",
       mmLabel: "Côté du carré noir à la règle, mm", mmBad: "Entrez un nombre entre 20 et 400.", ok: "OK", mmNow: "Marqueur : {mm} mm",
       retake: "Reprendre", reset: "Réinitialiser les points", cancel: "Annuler", del: "− point", done: "Terminé",
-      dim: "Encombrement", area: "Surface", inner: "Plus grand rectangle à l’intérieur", ft2: "pi²", fail: "Impossible de traiter la photo. Réessayez." },
+      dim: "Encombrement", area: "Surface", inner: "Plus grand rectangle à l’intérieur", ft2: "pi²", crossing: "Les lignes du contour se croisent — la surface serait fausse. Déplacez les points le long du bord de la pièce.", fail: "Impossible de traiter la photo. Réessayez." },
     en: { title: "Measure from photo", loading: "Loading recognition… (slower the first time)", finding: "Looking for the marker and the edge…",
       noMarker: "Marker not found. Check: the whole marker is in the frame, no glare, flat against the stone.",
       small: "The marker is small in the photo — move closer, or the sizes will be less accurate.",
@@ -30,7 +30,7 @@
       mmAsk: "Once: measure the side of the marker’s black square with a ruler, in millimetres.",
       mmLabel: "Black square side by ruler, mm", mmBad: "Enter a number from 20 to 400.", ok: "OK", mmNow: "Marker: {mm} mm",
       retake: "Retake", reset: "Reset points", cancel: "Cancel", del: "− point", done: "Done",
-      dim: "Overall size", area: "Area", inner: "Largest rectangle inside", ft2: "ft²", fail: "Could not process the photo. Try again." },
+      dim: "Overall size", area: "Area", inner: "Largest rectangle inside", ft2: "ft²", crossing: "The outline crosses itself — the area would be wrong. Move the points so the outline follows the edge of the piece.", fail: "Could not process the photo. Try again." },
     es: { title: "Medir por foto", loading: "Cargando el reconocimiento… (la primera vez tarda más)", finding: "Buscando el marcador y el borde…",
       noMarker: "No se encontró el marcador. Compruebe: el marcador entero en la foto, sin reflejos, pegado a la piedra.",
       small: "El marcador sale pequeño en la foto: acérquese, o las medidas serán menos precisas.",
@@ -38,7 +38,7 @@
       mmAsk: "Una vez: mida con una regla el lado del cuadrado negro del marcador, en milímetros.",
       mmLabel: "Lado del cuadrado negro con regla, mm", mmBad: "Introduzca un número de 20 a 400.", ok: "OK", mmNow: "Marcador: {mm} mm",
       retake: "Repetir foto", reset: "Restablecer puntos", cancel: "Cancelar", del: "− punto", done: "Listo",
-      dim: "Medida total", area: "Superficie", inner: "Rectángulo más grande dentro", ft2: "pie²", fail: "No se pudo procesar la foto. Inténtelo de nuevo." }
+      dim: "Medida total", area: "Superficie", inner: "Rectángulo más grande dentro", ft2: "pie²", crossing: "Las líneas del contorno se cruzan — la superficie saldría mal. Mueva los puntos para que sigan el borde de la pieza.", fail: "No se pudo procesar la foto. Inténtelo de nuevo." }
   };
 
   var lang = "ru", ui = null, st = null, resolveFn = null;
@@ -117,13 +117,27 @@
     ui.$("msrDone").addEventListener("click", function () { finish(result()); });
     ui.$("msrRetake").addEventListener("click", function () { file.value = ""; file.click(); });
     file.addEventListener("change", function () { if (file.files && file.files[0]) run(file.files[0]); });
-    ui.$("msrRetakeSame").addEventListener("click", function () { if (st && st.rect) { st.points = autoPoints(); st.sel = -1; refresh(); } });
+    ui.$("msrRetakeSame").addEventListener("click", function () {
+      if (!st || !st.rect) return;
+      var token = st.token;
+      msg("finding");
+      setTimeout(function () { // поиск контура тяжёлый: сначала показываем «Ищу…»
+        if (!st || st.token !== token || !st.rect) return;
+        st.points = autoPoints(); st.sel = -1; msg("hint"); refresh();
+      }, 30);
+    });
     ui.$("msrDel").addEventListener("click", function () {
       if (!st || !st.points.length) return;
       var i = st.sel >= 0 && st.sel < st.points.length ? st.sel : st.points.length - 1;
       st.points.splice(i, 1); st.sel = -1; refresh();
     });
-    ui.$("msrMmEdit").addEventListener("click", function () { askMm().then(function () { if (st && st.img) process(); }); });
+    ui.$("msrMmEdit").addEventListener("click", function () {
+      askMm().then(function (v) {
+        if (!st || !v) return;
+        if (st.rect) { st.rect.mmPerPx *= v / st.mm; st.mm = v; refresh(); } // точки те же, меняется только масштаб
+        else if (st.img && !st.processing) process();
+      });
+    });
     bindPointer(canvas);
     window.addEventListener("resize", function () { if (!ui.root.hidden) draw(); });
     return ui;
@@ -166,8 +180,11 @@
     w.hidden = !key;
   }
 
+  var askState = null;
   function askMm() {
-    return new Promise(function (resolve) {
+    if (askState) return askState.promise; // уже открыт — не открываем второй раз
+    askState = {};
+    askState.promise = new Promise(function (resolve) {
       var inp = ui.$("msrMm"), err = ui.$("msrMmErr");
       inp.value = storeGet(MM_OK) === "1" ? String(markerMm()) : "";
       err.textContent = "";
@@ -179,13 +196,16 @@
         if (!(v >= 20 && v <= 400)) { err.textContent = L().mmBad; return; }
         storeSet(MM_KEY, String(v)); storeSet(MM_OK, "1");
         ui.ask.hidden = true;
-        okBtn.removeEventListener("click", accept); inp.removeEventListener("keydown", onKey);
+        cleanup();
         texts();
         resolve(v);
       }
       function onKey(e) { if (e.key === "Enter") accept(); }
+      function cleanup() { okBtn.removeEventListener("click", accept); inp.removeEventListener("keydown", onKey); askState = null; }
+      askState.cancel = function () { ui.ask.hidden = true; cleanup(); resolve(null); };
       okBtn.addEventListener("click", accept); inp.addEventListener("keydown", onKey);
     });
+    return askState.promise;
   }
 
   function freeState() {
@@ -200,7 +220,10 @@
       return createImageBitmap(file, { imageOrientation: "from-image" }).catch(function () { return createImageBitmap(file); });
     }
     return new Promise(function (res, rej) {
-      var im = new Image(); im.onload = function () { res(im); }; im.onerror = rej; im.src = URL.createObjectURL(file);
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { URL.revokeObjectURL(url); res(im); };
+      im.onerror = function (e) { URL.revokeObjectURL(url); rej(e); };
+      im.src = url;
     });
   }
 
@@ -213,7 +236,7 @@
     msg("loading");
     draw();
     Promise.all([window.SlabCV.loadCV(), loadBitmap(file)]).then(function (r) {
-      if (!st || st.token !== token) return;
+      if (!st || st.token !== token) { if (r[1] && r[1].close) r[1].close(); return; }
       var cv = r[0].cv, bmp = r[1];
       st.cv = cv;
       var k = Math.min(1, MAX_INPUT / Math.max(bmp.width, bmp.height));
@@ -235,9 +258,11 @@
   }
 
   function process() {
-    var cv = st.cv;
+    var cv = st.cv, token = st.token;
+    st.processing = true;
     msg("finding");
     setTimeout(function () {
+      if (!st || st.token !== token) return;
       try {
         if (st.rect && st.rect.mat) { st.rect.mat.delete(); st.rect = null; }
         st.points = []; refresh();
@@ -252,9 +277,11 @@
         st.points = autoPoints();
         st.sel = -1;
         msg("hint");
-        warn(side < SMALL_PX ? "small" : null);
+        st.baseWarn = side < SMALL_PX ? "small" : null;
+        warn(st.baseWarn);
         refresh();
       } catch (e) { msg("fail", true); }
+      if (st) st.processing = false;
     }, 30);
   }
 
@@ -267,7 +294,9 @@
 
   function refresh() {
     var ok = st && st.rect && st.points.length >= 3;
-    ui.$("msrDone").disabled = !ok;
+    var crossing = ok && window.SlabCore.selfIntersects(st.points);
+    if (st && st.rect) warn(crossing ? "crossing" : st.baseWarn);
+    ui.$("msrDone").disabled = !ok || crossing;
     ui.$("msrDel").disabled = !(st && st.points.length);
     ui.$("msrRetakeSame").disabled = !(st && st.rect);
     if (ok) {
@@ -376,6 +405,7 @@
   }
 
   function finish(res) {
+    if (askState && askState.cancel) askState.cancel();
     freeState();
     st = null;
     ui.root.hidden = true;
@@ -404,6 +434,7 @@
       return {
         points: st ? st.points.slice() : [],
         select: function (i) { if (st) { st.sel = i; draw(); } },
+        setPoints: function (pts) { if (st) { st.points = pts.map(function (p) { return [p[0], p[1]]; }); st.sel = -1; refresh(); } },
         handleScreen: function (i) {
           var v = view(), r = ui.canvas.getBoundingClientRect(), p = st.points[i];
           return [r.left + v.ox + p[0] * v.s, r.top + v.oy + p[1] * v.s];

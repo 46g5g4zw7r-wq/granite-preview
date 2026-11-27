@@ -98,6 +98,24 @@ scene.loadCVNode().then(function (box) {
     rec.mat.delete(); sc.mat.delete();
   });
 
+  test("autoContour and detectMarker free every Mat they create", function () {
+    var Orig = cv.Mat, live = new Set(), origDel = Orig.prototype.delete;
+    function M() { var m = new (Function.prototype.bind.apply(Orig, [null].concat([].slice.call(arguments))))(); live.add(m); return m; }
+    Object.getOwnPropertyNames(Orig).forEach(function (k) { if (!(k in M)) try { M[k] = Orig[k]; } catch (e) {} });
+    M.prototype = Orig.prototype;
+    Orig.prototype.delete = function () { live.delete(this); return origDel.call(this); };
+    cv.Mat = M;
+    try {
+      var sc = scene.makeScene(cv, { polyMm: L, markerMm: 100, markerAtMm: [900, 150] });
+      var det = api.detectMarker(cv, sc.mat), rec = api.rectify(cv, sc.mat, det.corners, 100);
+      live.delete(sc.mat); live.delete(rec.mat);
+      api.autoContour(cv, rec.mat, rec.markerQuad);
+      api.autoContour(cv, rec.mat, rec.markerQuad);
+      rec.mat.delete(); sc.mat.delete();
+      assert.strictEqual(live.size, 0, live.size + " Mat(s) left undeleted");
+    } finally { cv.Mat = Orig; Orig.prototype.delete = origDel; }
+  });
+
   var fails = 0;
   tests.forEach(function (t) {
     try { t[1](); console.log("PASS", t[0]); } catch (e) { fails++; console.log("FAIL", t[0], "-", e.message || e); }
