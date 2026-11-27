@@ -1125,7 +1125,16 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   function saveStaff() {
     try { localStorage.setItem(STAFF_KEY, JSON.stringify(editState.extra[4] || [])); } catch (e) {}
   }
-  var editState = { removed: {}, extra: { 4: loadStaff() } };
+  // Удалённые строки и добавленные позиции каталога сохраняются в этом браузере
+  var EDIT_KEY = "granite.edits";
+  function loadEdits() {
+    try { return JSON.parse(localStorage.getItem(EDIT_KEY) || "{}"); } catch (e) { return {}; }
+  }
+  var savedEdits = loadEdits();
+  var editState = { removed: savedEdits.removed || {}, extra: { 4: loadStaff(), 5: savedEdits.catalog || [] } };
+  function saveEdits() {
+    try { localStorage.setItem(EDIT_KEY, JSON.stringify({ removed: editState.removed, catalog: editState.extra[5] || [] })); } catch (e) {}
+  }
   function rowsFor(i) {
     var rows = VIEWS[lang][i].rows;
     var rem = editState.removed[i] || {};
@@ -1157,6 +1166,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       editState.extra[i].splice(x.k, 1);
       if (i === 4) saveStaff();
     }
+    saveEdits();
     renderView(i);
   }
   function addForm(i, V) {
@@ -1191,6 +1201,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       editState.extra[i] = editState.extra[i] || [];
       editState.extra[i].push(vals);
       if (i === 4) saveStaff();
+      saveEdits();
       renderView(i);
     });
     wrap.appendChild(form);
