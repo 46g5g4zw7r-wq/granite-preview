@@ -289,7 +289,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       kpi: ["Плит на складе", "Мало на складе", "Приход сегодня"],
       search: "Поиск по названию или ячейке", scan: "Сканировать код", add: "+ Добавить",
       st: { ok: "в наличии", low: "мало", hold: "в резерве", cut: "в распиле" },
-      kind: { quartz: "кварц", granite: "гранит" },
+      kind: { quartz: "кварц", granite: "гранит", dekton: "Dekton", marble: "мрамор", quartzite: "кварцит" },
       cell: "ячейка", move: "Переместить", photo: "Фото", sample: "Пример данных для превью — не настоящий склад.",
       camera: "Камера", gallery: "Галерея", reset: "Сбросить",
       measure: "Сканировать QR-код", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (дюймы).", mW: "Ширина, дюймы", mH: "Высота, дюймы", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
@@ -300,7 +300,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       kpi: ["Plaques en stock", "Stock faible", "Entrées aujourd’hui"],
       search: "Rechercher par nom ou emplacement", scan: "Scanner code", add: "+ Ajouter",
       st: { ok: "en stock", low: "faible", hold: "réservé", cut: "en découpe" },
-      kind: { quartz: "quartz", granite: "granit" },
+      kind: { quartz: "quartz", granite: "granit", dekton: "Dekton", marble: "marbre", quartzite: "quartzite" },
       cell: "emplacement", move: "Déplacer", photo: "Photo", sample: "Exemple de données pour l’aperçu — pas un vrai stock.",
       camera: "Appareil photo", gallery: "Galerie", reset: "Réinitialiser",
       measure: "Scanner le QR", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (pouces).", mW: "Largeur, pouces", mH: "Hauteur, pouces", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
@@ -311,7 +311,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       kpi: ["Slabs in stock", "Low stock", "Intake today"],
       search: "Search by name or cell", scan: "Scan code", add: "+ Add",
       st: { ok: "in stock", low: "low", hold: "reserved", cut: "cutting" },
-      kind: { quartz: "quartz", granite: "granite" },
+      kind: { quartz: "quartz", granite: "granite", dekton: "Dekton", marble: "marble", quartzite: "quartzite" },
       cell: "cell", move: "Move", photo: "Photo", sample: "Sample data for the preview — not a real warehouse.",
       camera: "Camera", gallery: "Gallery", reset: "Reset",
       measure: "Scan QR code", mTitle: "Remnant size", mNote: "Manual entry for now. In the second stage the app will find the ArUco marker in the photo and calculate the size (in).", mW: "Width, in", mH: "Height, in", mOk: "Confirm", mCancel: "Cancel", mBad: "Enter sizes greater than zero.", mSaved: "Preview: sizes are not saved to the database.", foundTitle: "Similar by colour and veining (rough comparison)", photoErr: "Could not read the photo"
@@ -590,7 +590,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
         qcap.textContent = x.code;
         acts.parentNode.insertBefore(qcap, acts);
       }
-      c.querySelector(".meta").textContent = T.kind[x.kind] + " · " + fmtSize(x.size) + " · " + T.cell + " " + x.cell;
+      c.querySelector(".meta").textContent = (T.kind[x.kind] || x.kind) + " · " + fmtSize(x.size) + " · " + T.cell + " " + x.cell;
       var badge = c.querySelector(".badge");
       badge.textContent = T.st[x.st];
       badge.className = "badge st-" + x.st;
@@ -905,7 +905,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     kpi: ["Placas en almacén", "Stock bajo", "Entradas hoy"],
     search: "Buscar por nombre o celda", scan: "Escanear código", add: "+ Añadir",
     st: { ok: "en stock", low: "bajo", hold: "reservado", cut: "en corte" },
-    kind: { quartz: "cuarzo", granite: "granito" },
+    kind: { quartz: "cuarzo", granite: "granito", dekton: "Dekton", marble: "mármol", quartzite: "cuarcita" },
     cell: "celda", move: "Mover", photo: "Foto",
     sample: "Datos de ejemplo para la vista previa, no es un almacén real.",
     camera: "Cámara", gallery: "Galería", reset: "Restablecer",
@@ -1400,7 +1400,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     document.getElementById("iOk").textContent = L.ok;
     iKind.innerHTML = "";
     iForm.innerHTML = "";
-    [["quartz", K.quartz], ["granite", K.granite]].forEach(function (o) { iKind.add(new Option(o[1], o[0])); });
+    [["granite", K.granite], ["quartz", K.quartz], ["dekton", K.dekton], ["marble", K.marble], ["quartzite", K.quartzite]].forEach(function (o) { iKind.add(new Option(o[1], o[0])); });
     [["slab", L.slab], ["rest", L.rest]].forEach(function (o) { iForm.add(new Option(o[1], o[0])); });
     if (kv) iKind.value = kv;
     if (fv) iForm.value = fv;
