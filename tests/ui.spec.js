@@ -117,7 +117,7 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
       await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3; }, null, { timeout: 60000 });
       await p.click("#msrCancel");
     }
-    assert.deepStrictEqual(errs, []);
+    assert.deepStrictEqual(errs, [], JSON.stringify(errs).slice(0, 400));
   });
 
   await b.close(); srv.kill();

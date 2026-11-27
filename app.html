@@ -2,6 +2,8 @@
 <html lang="ru" translate="no">
 <head>
 <meta name="google" content="notranslate">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' data:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
 
 <meta charset="utf-8">
@@ -178,9 +180,9 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 html[data-theme="dark"] .btn:active,html[data-theme="dark"] .sm:active,html[data-theme="dark"] .seg button:active{background:linear-gradient(180deg,#8a6a2e,#5c4620);color:#fff3d6;border-color:#c09048}
 html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a062,#8a6a2e);color:#fff}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/qrcodejs.min.js"></script>
+<script src="vendor/zxing.min.js"></script>
 </head>
 <body>
 
