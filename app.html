@@ -185,7 +185,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 <body>
 
 <header class="top">
-  <div class="brand"><i></i><span id="brand">Slabwise</span><button type="button" class="role" id="role" title="Переключить роль (превью)">Офис</button>
+  <div class="brand"><i></i><span id="brand">Slabwise</span><button type="button" class="role" id="role" title="Переключить роль (превью)">Производство</button>
     <span class="rhint" id="roleHint"></span></div>
   <div class="right">
     <nav class="lang notranslate" translate="no" aria-label="Язык">
@@ -301,7 +301,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 (function () {
   var DICT = {
     ru: {
-      brand: "Slabwise", role: "Офис", logout: "Выйти",
+      brand: "Slabwise", role: "Производство", logout: "Выйти",
       tabs: ["Остатки", "Приход", "Журнал", "Заказы", "Персонал", "Каталог"],
       kpi: ["Плит на складе", "Мало на складе", "Приход сегодня"],
       search: "Поиск по названию или ячейке", scan: "Сканировать код", add: "+ Добавить",
@@ -312,7 +312,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       measure: "Сканировать QR-код", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (дюймы).", mW: "Ширина, дюймы", mH: "Высота, дюймы", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
     },
     fr: {
-      brand: "Slabwise", role: "Bureau", logout: "Quitter",
+      brand: "Slabwise", role: "Production", logout: "Quitter",
       tabs: ["Stock", "Entrées", "Journal", "Commandes", "Personnel", "Catalogue"],
       kpi: ["Plaques en stock", "Stock faible", "Entrées aujourd’hui"],
       search: "Rechercher par nom ou emplacement", scan: "Scanner code", add: "+ Ajouter",
@@ -323,7 +323,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       measure: "Scanner le QR", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (pouces).", mW: "Largeur, pouces", mH: "Hauteur, pouces", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
     },
     en: {
-      brand: "Slabwise", role: "Office", logout: "Sign out",
+      brand: "Slabwise", role: "Production", logout: "Sign out",
       tabs: ["Stock", "Intake", "Journal", "Orders", "Staff", "Catalog"],
       kpi: ["Slabs in stock", "Low stock", "Intake today"],
       search: "Search by name or cell", scan: "Scan code", add: "+ Add",
@@ -917,7 +917,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 
   /* ---------- Испанский ---------- */
   DICT.es = {
-    brand: "Slabwise", role: "Oficina", logout: "Salir",
+    brand: "Slabwise", role: "Producción", logout: "Salir",
     tabs: ["Existencias", "Entradas", "Diario", "Pedidos", "Personal", "Catálogo"],
     kpi: ["Placas en almacén", "Stock bajo", "Entradas hoy"],
     search: "Buscar por nombre o celda", scan: "Escanear código", add: "+ Añadir",
@@ -932,7 +932,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     mW: "Ancho, pulg.", mH: "Alto, pulg.", mOk: "Confirmar", mCancel: "Cancelar",
     mBad: "Introduzca medidas mayores que cero.", mSaved: "Vista previa: las medidas no se guardan en la base."
   };
-  var ES_ROLES = { admin: "Administrador", staff: "Oficina" };
+  var ES_ROLES = { admin: "Administrador", staff: "Producción" };
   var ES_ADMIN = { insecure: "La contraseña solo se puede guardar en una página segura. Abra https://slabwise.ca",
     note: "Modo administrador: aquí puede añadir y eliminar empleados y posiciones.", add: "Añadir", del: "Eliminar",
     fill: "Rellene todos los campos.",
@@ -942,7 +942,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     inNote: "Introduzca la contraseña de administrador para añadir y eliminar empleados y posiciones.",
     pw: "Contraseña", pw2: "Repita la contraseña", ok: "Entrar", okSet: "Guardar", cancel: "Cancelar",
     short: "Mínimo 8 caracteres.", mismatch: "Las contraseñas no coinciden.", wrong: "Contraseña incorrecta.",
-    hintIn: "Pulse «Oficina» para entrar como administrador", hintOut: "Pulse para salir del modo administrador",
+    hintIn: "Pulse «Producción» para entrar como administrador", hintOut: "Pulse para salir del modo administrador",
     coLbl: "Nombre de la empresa (se ve en la entrada y en la portada)", coSave: "Guardar",
     coSaved: "Guardado. Actualice la página de entrada para ver el nombre.",
     coFail: "Este navegador no guarda los datos de la vista previa: el nombre no se guardó.",
@@ -1124,14 +1124,14 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
                   document.getElementById("found"), document.getElementById("measure"),
                   document.getElementById("formSeg")];
   var ROLES = {
-    ru: { admin: "Администратор", staff: "Офис" },
-    fr: { admin: "Administrateur", staff: "Bureau" },
-    en: { admin: "Administrator", staff: "Office" }
+    ru: { admin: "Администратор", staff: "Производство" },
+    fr: { admin: "Administrateur", staff: "Production" },
+    en: { admin: "Administrator", staff: "Production" }
   };
   var ADMIN = {
-    ru: { insecure: "Пароль можно сохранить только на защищённой странице. Откройте https://slabwise.ca", note: "Режим администратора: здесь можно добавлять и удалять сотрудников и позиции.", add: "Добавить", del: "Удалить", fill: "Заполните все поля.", setTitle: "Пароль администратора", setNote: "Первый вход: придумайте свой пароль. В этом браузере хранится только хеш. Минимум 8 символов.", inTitle: "Вход администратора", inNote: "Введите пароль администратора, чтобы добавлять и удалять сотрудников и позиции.", pw: "Пароль", pw2: "Повторите пароль", ok: "Войти", okSet: "Сохранить", cancel: "Отмена", short: "Минимум 8 символов.", mismatch: "Пароли не совпадают.", wrong: "Неверный пароль.", hintIn: "Нажмите на «Офис», чтобы войти как администратор", hintOut: "Нажмите, чтобы выйти из режима администратора", coLbl: "Название компании (видно на входе и в заставке)", coSave: "Сохранить", coSaved: "Сохранено. Обновите страницу входа, чтобы увидеть название.", coFail: "Этот браузер не сохраняет данные превью: название не запомнилось.", scanned: "Фото сделано. Размеры пока вводятся вручную: считывание QR и автоизмерение будут на втором этапе.", segAll: "Все", segSlab: "Целые плиты", segRest: "Остатки" },
-    fr: { insecure: "Le mot de passe ne peut être enregistré que sur une page sécurisée. Ouvrez https://slabwise.ca", note: "Mode administrateur : ici vous pouvez ajouter et supprimer des employés et des plaques.", add: "Ajouter", del: "Supprimer", fill: "Remplissez tous les champs.", setTitle: "Mot de passe administrateur", setNote: "Première connexion : choisissez votre mot de passe. Seul un hachage est gardé dans ce navigateur. 8 caractères minimum.", inTitle: "Connexion administrateur", inNote: "Saisissez le mot de passe administrateur pour ajouter et supprimer des employés et des plaques.", pw: "Mot de passe", pw2: "Répétez le mot de passe", ok: "Se connecter", okSet: "Enregistrer", cancel: "Annuler", short: "8 caractères minimum.", mismatch: "Les mots de passe ne correspondent pas.", wrong: "Mot de passe incorrect.", hintIn: "Cliquez sur « Bureau » pour vous connecter comme administrateur", hintOut: "Cliquez pour quitter le mode administrateur", coLbl: "Nom de l’entreprise (visible à la connexion et sur l’écran d’accueil)", coSave: "Enregistrer", coSaved: "Enregistré. Rechargez la page d’accueil pour voir le nom.", coFail: "Ce navigateur ne garde pas les données de l’aperçu : le nom n’a pas été enregistré.", scanned: "Photo prise. Saisissez les dimensions à la main : la lecture du QR et des dimensions viendra à la deuxième étape.", segAll: "Tout", segSlab: "Plaques entières", segRest: "Chutes" },
-    en: { insecure: "The password can only be saved on a secure page. Open https://slabwise.ca", note: "Administrator mode: you can add and remove staff and items here.", add: "Add", del: "Delete", fill: "Fill in all fields.", setTitle: "Administrator password", setNote: "First time: choose your password. Only a hash is kept in this browser. At least 8 characters.", inTitle: "Administrator sign-in", inNote: "Enter the administrator password to add and remove staff and items.", pw: "Password", pw2: "Repeat password", ok: "Sign in", okSet: "Save", cancel: "Cancel", short: "At least 8 characters.", mismatch: "Passwords do not match.", wrong: "Wrong password.", hintIn: "Click “Office” to sign in as administrator", hintOut: "Click to leave administrator mode", coLbl: "Company name (shown on the sign-in and the splash screen)", coSave: "Save", coSaved: "Saved. Reload the splash page to see the name.", coFail: "This browser does not keep preview data: the name was not saved.", scanned: "Photo taken. Enter the sizes by hand for now: QR and size reading comes in the second stage.", segAll: "All", segSlab: "Whole slabs", segRest: "Remnants" }
+    ru: { insecure: "Пароль можно сохранить только на защищённой странице. Откройте https://slabwise.ca", note: "Режим администратора: здесь можно добавлять и удалять сотрудников и позиции.", add: "Добавить", del: "Удалить", fill: "Заполните все поля.", setTitle: "Пароль администратора", setNote: "Первый вход: придумайте свой пароль. В этом браузере хранится только хеш. Минимум 8 символов.", inTitle: "Вход администратора", inNote: "Введите пароль администратора, чтобы добавлять и удалять сотрудников и позиции.", pw: "Пароль", pw2: "Повторите пароль", ok: "Войти", okSet: "Сохранить", cancel: "Отмена", short: "Минимум 8 символов.", mismatch: "Пароли не совпадают.", wrong: "Неверный пароль.", hintIn: "Нажмите на «Производство», чтобы войти как администратор", hintOut: "Нажмите, чтобы выйти из режима администратора", coLbl: "Название компании (видно на входе и в заставке)", coSave: "Сохранить", coSaved: "Сохранено. Обновите страницу входа, чтобы увидеть название.", coFail: "Этот браузер не сохраняет данные превью: название не запомнилось.", scanned: "Фото сделано. Размеры пока вводятся вручную: считывание QR и автоизмерение будут на втором этапе.", segAll: "Все", segSlab: "Целые плиты", segRest: "Остатки" },
+    fr: { insecure: "Le mot de passe ne peut être enregistré que sur une page sécurisée. Ouvrez https://slabwise.ca", note: "Mode administrateur : ici vous pouvez ajouter et supprimer des employés et des plaques.", add: "Ajouter", del: "Supprimer", fill: "Remplissez tous les champs.", setTitle: "Mot de passe administrateur", setNote: "Première connexion : choisissez votre mot de passe. Seul un hachage est gardé dans ce navigateur. 8 caractères minimum.", inTitle: "Connexion administrateur", inNote: "Saisissez le mot de passe administrateur pour ajouter et supprimer des employés et des plaques.", pw: "Mot de passe", pw2: "Répétez le mot de passe", ok: "Se connecter", okSet: "Enregistrer", cancel: "Annuler", short: "8 caractères minimum.", mismatch: "Les mots de passe ne correspondent pas.", wrong: "Mot de passe incorrect.", hintIn: "Cliquez sur « Production » pour vous connecter comme administrateur", hintOut: "Cliquez pour quitter le mode administrateur", coLbl: "Nom de l’entreprise (visible à la connexion et sur l’écran d’accueil)", coSave: "Enregistrer", coSaved: "Enregistré. Rechargez la page d’accueil pour voir le nom.", coFail: "Ce navigateur ne garde pas les données de l’aperçu : le nom n’a pas été enregistré.", scanned: "Photo prise. Saisissez les dimensions à la main : la lecture du QR et des dimensions viendra à la deuxième étape.", segAll: "Tout", segSlab: "Plaques entières", segRest: "Chutes" },
+    en: { insecure: "The password can only be saved on a secure page. Open https://slabwise.ca", note: "Administrator mode: you can add and remove staff and items here.", add: "Add", del: "Delete", fill: "Fill in all fields.", setTitle: "Administrator password", setNote: "First time: choose your password. Only a hash is kept in this browser. At least 8 characters.", inTitle: "Administrator sign-in", inNote: "Enter the administrator password to add and remove staff and items.", pw: "Password", pw2: "Repeat password", ok: "Sign in", okSet: "Save", cancel: "Cancel", short: "At least 8 characters.", mismatch: "Passwords do not match.", wrong: "Wrong password.", hintIn: "Click “Production” to sign in as administrator", hintOut: "Click to leave administrator mode", coLbl: "Company name (shown on the sign-in and the splash screen)", coSave: "Save", coSaved: "Saved. Reload the splash page to see the name.", coFail: "This browser does not keep preview data: the name was not saved.", scanned: "Photo taken. Enter the sizes by hand for now: QR and size reading comes in the second stage.", segAll: "All", segSlab: "Whole slabs", segRest: "Remnants" }
   };
   // Правки превью: удалённые строки базовой таблицы и добавленные строки, по индексу вкладки
   // Добавленные сотрудники сохраняются, чтобы страница работника (worker.html) их видела
