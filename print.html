@@ -21,8 +21,12 @@
   .marker-box img { width:100%; height:100%; image-rendering:pixelated; display:block; }
   .btn { padding:12px 18px; border:0; border-radius:10px; background:var(--gold); color:#fff; font-size:1rem; cursor:pointer; }
   .note { font-size:.9rem; color:#6b5f4c; }
+  .mmbox { display:grid; gap:8px; margin-top:12px; }
+  .mmbox label { font-weight:600; font-size:.92rem; }
+  .mmrow { display:flex; gap:8px; }
+  .mmrow input { flex:1; font:inherit; font-size:1rem; padding:10px 12px; border:1px solid #cfc8bb; border-radius:10px; }
   @media print {
-    .langs, .btn, .intro, .steps, .note-screen { display:none !important; }
+    .langs, .btn, .intro, .steps, .note-screen, .mmbox { display:none !important; }
     body, .wrap, .card { background:#fff; border:0; padding:0; margin:0; }
     @page { size: A4; margin: 20mm; }
     .marker-box { width:100mm; height:100mm; }
@@ -45,6 +49,11 @@
     <div class="marker-box"><img alt="ArUco" src="data:image/png;base64,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"></div>
     <p class="note" id="scale"></p>
   </div>
+  <div class="card mmbox" id="mmBox">
+    <label for="mm" id="mmLabel"></label>
+    <div class="mmrow"><input id="mm" type="text" inputmode="decimal" autocomplete="off"><button type="button" class="btn" id="mmSave"></button></div>
+    <p class="note" id="mmMsg" role="status"></p>
+  </div>
 
   <button type="button" class="btn" id="printBtn"></button>
   <p class="note note-screen" id="foot"></p>
@@ -54,32 +63,44 @@
   var T = {
     ru: { title: "Калибровочный маркер", steps: [
       "Распечатай на A4 в масштабе 100%: в настройках печати выбери «Реальный размер», а не «По размеру страницы».",
-      "Проверь линейкой чёрный квадрат: он должен быть ровно 100 × 100 мм. Если нет, не используй этот лист.",
+      "Измерь линейкой сторону чёрного квадрата и впиши число ниже. Принтер иногда растягивает страницу: тогда квадрат не 100 мм, и это нормально — приложение посчитает по твоему числу.",
       "Наклей маркер на жёсткий картон или пенопласт, чтобы не было складок.",
-      "Положи маркер рядом с куском, в одной плоскости, не закрывая край куска.",
-      "Снимай строго сверху, без бликов и пыли на маркере."],
-      scale: "Чёрный квадрат должен быть 100 × 100 мм.", print: "Напечатать", foot: "Печатается только маркер. Кнопки и подсказки на бумаге не будут." },
-    fr: { title: "Marqueur de calibrage", steps: [
+      "К верхнему краю картонки приделай крючок (проволока или скрепка), чтобы маркер можно было повесить на край куска.",
+      "Повесь маркер на верхний или боковой край остатка: картонка должна плотно прилегать к лицевой стороне камня и не закрывать край куска.",
+      "Отойди и сними весь кусок целиком спереди, без бликов на маркере. Потом в форме «Новый кусок» нажми «Сфотографировать и измерить»."],
+      scale: "Чёрный квадрат печатается стороной 100 мм. Проверь линейкой и впиши, сколько получилось.",
+      mmLabel: "Сторона чёрного квадрата по линейке, мм", mmSave: "Сохранить", mmOk: "Сохранено: {mm} мм. Приложение будет считать по этому размеру.", mmBad: "Введи число от 20 до 400.",
+      print: "Напечатать", foot: "Печатается только маркер. Кнопки и поле размера на лист не попадут." },
+    fr: { title: "Marqueur d’étalonnage", steps: [
       "Imprimez sur A4 à l’échelle 100 % : choisissez « Taille réelle », et non « Ajuster à la page ».",
-      "Vérifiez à la règle que le carré noir fait exactement 100 × 100 mm. Sinon, n’utilisez pas cette feuille.",
-      "Collez le marqueur sur du carton rigide ou de la mousse, sans plis.",
-      "Placez le marqueur à côté de la pièce, dans le même plan, sans recouvrir le bord de la pièce.",
-      "Photographiez strictement de dessus, sans reflets ni poussière sur le marqueur."],
-      scale: "Le carré noir doit faire 100 × 100 mm.", print: "Imprimer", foot: "Seul le marqueur sera imprimé." },
+      "Mesurez à la règle le côté du carré noir et saisissez-le ci-dessous. L’imprimante agrandit parfois la page : le carré ne fait alors pas 100 mm, ce n’est pas grave — l’application utilisera votre mesure.",
+      "Collez le marqueur sur un carton rigide ou de la mousse, sans plis.",
+      "Fixez un crochet en haut du carton (fil de fer ou trombone) pour pouvoir l’accrocher au bord de la pièce.",
+      "Accrochez le marqueur au bord supérieur ou latéral de la chute : le carton doit être bien plaqué contre la face de la pierre, sans cacher le bord de la pièce.",
+      "Reculez et photographiez toute la pièce de face, sans reflet sur le marqueur. Puis, dans « Nouvelle pièce », appuyez sur « Photographier et mesurer »."],
+      scale: "Le carré noir est imprimé avec un côté de 100 mm. Vérifiez à la règle et saisissez la mesure obtenue.",
+      mmLabel: "Côté du carré noir à la règle, mm", mmSave: "Enregistrer", mmOk: "Enregistré : {mm} mm. L’application utilisera cette mesure.", mmBad: "Entrez un nombre entre 20 et 400.",
+      print: "Imprimer", foot: "Seul le marqueur est imprimé. Les boutons et le champ ne figurent pas sur la feuille." },
     en: { title: "Calibration marker", steps: [
       "Print on A4 at 100% scale: choose “Actual size”, not “Fit to page”.",
-      "Check the black square with a ruler: it must be exactly 100 × 100 mm. If not, don’t use this sheet.",
+      "Measure the side of the black square with a ruler and enter it below. Printers sometimes stretch the page: then the square is not 100 mm, and that’s fine — the app will use your number.",
       "Glue the marker to stiff cardboard or foam so it has no creases.",
-      "Place the marker next to the piece, on the same plane, without covering the edge of the piece.",
-      "Shoot straight from above, with no glare or dust on the marker."],
-      scale: "The black square must be 100 × 100 mm.", print: "Print", foot: "Only the marker will be printed." },
+      "Attach a hook to the top of the cardboard (wire or a paper clip) so the marker can hang on the edge of the piece.",
+      "Hang the marker on the top or side edge of the remnant: the cardboard must lie flat against the face of the stone and not cover the edge of the piece.",
+      "Step back and shoot the whole piece from the front, with no glare on the marker. Then in “New piece” tap “Take photo and measure”."],
+      scale: "The black square is printed with a 100 mm side. Check it with a ruler and enter what you get.",
+      mmLabel: "Black square side by ruler, mm", mmSave: "Save", mmOk: "Saved: {mm} mm. The app will use this size.", mmBad: "Enter a number from 20 to 400.",
+      print: "Print", foot: "Only the marker is printed. The buttons and the size field are not on the sheet." },
     es: { title: "Marcador de calibración", steps: [
       "Imprima en A4 al 100 %: elija «Tamaño real», no «Ajustar a la página».",
-      "Compruebe con una regla que el cuadrado negro mide exactamente 100 × 100 mm. Si no, no use esta hoja.",
-      "Pegue el marcador en cartón rígido o espuma, sin arrugas.",
-      "Coloque el marcador junto a la pieza, en el mismo plano, sin tapar el borde de la pieza.",
-      "Fotografíe estrictamente desde arriba, sin reflejos ni polvo en el marcador."],
-      scale: "El cuadrado negro debe medir 100 × 100 mm.", print: "Imprimir", foot: "Solo se imprimirá el marcador." }
+      "Mida con una regla el lado del cuadrado negro e introdúzcalo abajo. A veces la impresora estira la página: entonces el cuadrado no mide 100 mm, y no pasa nada — la aplicación usará su medida.",
+      "Pegue el marcador en un cartón rígido o espuma, sin arrugas.",
+      "Ponga un gancho en la parte superior del cartón (alambre o un clip) para poder colgarlo del borde de la pieza.",
+      "Cuelgue el marcador del borde superior o lateral del resto: el cartón debe quedar pegado a la cara de la piedra y sin tapar el borde de la pieza.",
+      "Aléjese y fotografíe la pieza entera de frente, sin reflejos en el marcador. Luego, en «Pieza nueva», pulse «Fotografiar y medir»."],
+      scale: "El cuadrado negro se imprime con 100 mm de lado. Compruébelo con una regla e introduzca lo que mida.",
+      mmLabel: "Lado del cuadrado negro con regla, mm", mmSave: "Guardar", mmOk: "Guardado: {mm} mm. La aplicación usará esta medida.", mmBad: "Introduzca un número de 20 a 400.",
+      print: "Imprimir", foot: "Solo se imprime el marcador. Los botones y el campo de medida no salen en la hoja." }
   };
   var lang = "ru";
   try { var s = localStorage.getItem("granite.lang"); if (T[s]) lang = s; } catch (e) {}
@@ -92,6 +113,12 @@
     document.getElementById("scale").textContent = t.scale;
     document.getElementById("printBtn").textContent = t.print;
     document.getElementById("foot").textContent = t.foot;
+    document.getElementById("mmLabel").textContent = t.mmLabel;
+    document.getElementById("mmSave").textContent = t.mmSave;
+    var cur = null; try { if (localStorage.getItem("granite.markerMmOk") === "1") cur = localStorage.getItem("granite.markerMm"); } catch (e) {}
+    var mmInp = document.getElementById("mm");
+    if (cur && !mmInp.value) mmInp.value = cur;
+    document.getElementById("mmMsg").textContent = cur ? t.mmOk.replace("{mm}", cur) : "";
     Array.prototype.forEach.call(document.querySelectorAll("#langs button"), function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang));
     });
@@ -104,6 +131,16 @@
     });
   });
   document.getElementById("printBtn").addEventListener("click", function () { window.print(); });
+  // Размер маркера по линейке: тот же ключ читает экран измерения в приложении
+  function saveMm() {
+    var t = T[lang], v = parseFloat(String(document.getElementById("mm").value).replace(",", "."));
+    var msgEl = document.getElementById("mmMsg");
+    if (!(v >= 20 && v <= 400)) { msgEl.textContent = t.mmBad; return; }
+    try { localStorage.setItem("granite.markerMm", String(v)); localStorage.setItem("granite.markerMmOk", "1"); } catch (e) {}
+    msgEl.textContent = t.mmOk.replace("{mm}", String(v));
+  }
+  document.getElementById("mmSave").addEventListener("click", saveMm);
+  document.getElementById("mm").addEventListener("keydown", function (e) { if (e.key === "Enter") saveMm(); });
   render();
 })();
 </script>
