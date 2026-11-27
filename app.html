@@ -1580,6 +1580,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     window.SlabMeasure.open(f, lang).then(function (res) {
       if (!res) return;
       iW.value = String(res.wIn); iH.value = String(res.hIn);
+      iForm.value = "rest"; // по фото меряются только остатки; слэбы заводятся по QR
       pendingImg = res.photo;
       document.getElementById("iPhName").textContent = MEAS_FROM[lang] || MEAS_FROM.ru;
       pendingMeas = { areaFt2: res.areaFt2, innerWIn: res.innerWIn, innerHIn: res.innerHIn, polyIn: res.polyIn, markerMm: res.markerMm, v: 1 };

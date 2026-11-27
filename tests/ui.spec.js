@@ -52,6 +52,12 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
     assert.ok(d, "no dims"); near(d[0], 59.1, 0.7, "W"); near(d[1], 35.4, 0.7, "H");
   });
 
+  await step("edit hint stays visible even when the small-marker warning shows", async function () {
+    var hint = await p.evaluate(function () { return window.SlabMeasure._T.en.hint; });
+    var all = await p.evaluate(function () { return document.getElementById("msr").textContent; });
+    assert.ok(all.indexOf(hint) >= 0, "hint not shown");
+  });
+
   await step("dragging a point changes the numbers; fewer than 3 points disables Done", async function () {
     var before = await p.textContent("#msrArea");
     var h = await p.evaluate(function () { return window.SlabMeasure._state().handleScreen(0); });
@@ -77,7 +83,7 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
     near(parseFloat(await p.inputValue("#iW")), 59.1, 0.7, "iW");
     near(parseFloat(await p.inputValue("#iH")), 35.4, 0.7, "iH");
     await p.fill("#iName", "Test remnant"); await p.fill("#iCell", "Z-09");
-    await p.selectOption("#iForm", "rest");
+    assert.strictEqual(await p.inputValue("#iForm"), "rest", "type not set to remnant");
     await p.click("#iOk");
     var it = await p.evaluate(function () { var a = JSON.parse(localStorage.getItem("granite.items") || "[]"); return a[a.length - 1]; });
     assert.ok(it && it.meas && it.meas.areaFt2 > 0, "no meas"); assert.ok(it.img && it.img.indexOf("data:image") === 0, "no photo");

@@ -9,7 +9,7 @@ function near(a, b, tol, msg) { assert.ok(Math.abs(a - b) <= tol, (msg || "") + 
 
 // Точки истины (мм в плоскости камня) -> мм через выпрямленное изображение: проверяем масштаб и выпрямление,
 // перенося истину сквозь ту же цепочку, что и изображение.
-function measureTruth(cv, api, sc, markerMm) {
+function _unusedMeasureTruth(cv, api, sc, markerMm) {
   var det = api.detectMarker(cv, sc.mat);
   assert.ok(det, "marker not found");
   var rec = api.rectify(cv, sc.mat, det.corners, markerMm);
@@ -54,10 +54,21 @@ scene.loadCVNode().then(function (box) {
     });
   });
 
-  test("marker at side, rotated 90 and 45 deg, 127 mm: scale correct", function () {
-    [90, 45].forEach(function (rot) {
-      var sc = scene.makeScene(cv, { polyMm: L, markerMm: 127, markerAtMm: [300, 600], markerRotDeg: rot, tilt: 0.08, seed: rot });
-      measureTruth(cv, api, sc, 127); sc.mat.delete();
+  // Any marker position/rotation: full pipeline, same tolerances; photo "up" must stay up (long side horizontal)
+  [[90, [300, 600], 127, 0.1], [45, [300, 600], 127, 0.1], [180, [1200, 200], 100, 0.1], [0, [1100, 120], 100, 0.25]].forEach(function (c) {
+    test("marker rot " + c[0] + "deg at " + c[1] + ", " + c[2] + " mm, tilt " + c[3] + ": sizes within " + (c[3] > 0.2 ? 1.0 : 0.6) + "in, picture upright", function () {
+      var sc = scene.makeScene(cv, { polyMm: L, markerMm: c[2], markerAtMm: c[1], markerRotDeg: c[0], tilt: c[3], pxPerMm: 2, seed: c[0] + 1 });
+      var det = api.detectMarker(cv, sc.mat); assert.ok(det, "not found");
+      var rec = api.rectify(cv, sc.mat, det.corners, c[2]);
+      var poly = api.autoContour(cv, rec.mat, rec.markerQuad);
+      var mm = poly.map(function (p) { return [p[0] * rec.mmPerPx, p[1] * rec.mmPerPx]; });
+      var s = Core.summarize(mm), t = Core.summarize(L);
+      var tol = c[3] > 0.2 ? 1.0 : 0.6;
+      near(s.wIn, t.wIn, tol, "wIn"); near(s.hIn, t.hIn, tol, "hIn");
+      var a = Core.minAreaRect(mm).angle % Math.PI; if (a < 0) a += Math.PI;
+      var off = Math.min(a, Math.PI - a) * 180 / Math.PI;
+      assert.ok(off < 12, "long side tilted " + off.toFixed(1) + " deg from horizontal");
+      rec.mat.delete(); sc.mat.delete();
     });
   });
 

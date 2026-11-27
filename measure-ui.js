@@ -68,7 +68,7 @@
       "#msr .nums div{background:#22252b;border-radius:10px;padding:8px 10px}#msr .nums small{display:block;color:#b9b2a5;font-size:.75rem}" +
       "#msr .nums b{font-size:1.05rem}#msr button{font:inherit;border-radius:10px;border:1px solid #4a4d55;background:#2a2d33;color:#f1ece2;padding:9px 14px;cursor:pointer}" +
       "#msr button.gold{background:linear-gradient(180deg,#d9b276,#a87f3a);border-color:#8a6a2e;color:#fff;font-weight:700}#msr button:disabled{opacity:.45;cursor:not-allowed}" +
-      "#msr .grow{flex:1}#msrMsg{padding:8px 14px;color:#f3dca8;min-height:1.2em}#msrMsg.err{color:#ff9d8f}" +
+      "#msr .grow{flex:1}#msrMsg{padding:8px 14px;color:#f3dca8;min-height:1.2em}#msrMsg.err{color:#ff9d8f}#msrWarn{padding:0 14px 8px;color:#ff9d8f}#msrWarn[hidden]{display:none}" +
       "#msrMmAsk{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#22252b;border:1px solid #e2b866;border-radius:14px;padding:16px;max-width:340px;width:90%;display:grid;gap:10px;z-index:2}" +
       "#msrMmAsk[hidden]{display:none}#msrMmAsk input{font:inherit;padding:10px;border-radius:10px;border:1px solid #4a4d55;background:#111317;color:#fff}" +
       "#msr .mlang{display:flex;gap:4px}#msr .mlang button{padding:5px 9px;font-size:.78rem;font-weight:700}#msr .mlang button.on{background:#a87f3a;border-color:#8a6a2e}" +
@@ -90,6 +90,7 @@
     el("button", { id: "msrMmEdit", type: "button" }, head);
     el("button", { id: "msrCancel", type: "button" }, head);
     el("div", { id: "msrMsg", "aria-live": "polite" }, root);
+    el("div", { id: "msrWarn", "aria-live": "polite", hidden: "" }, root);
     var stage = el("div", { "class": "stage" }, root);
     var canvas = el("canvas", { id: "msrCanvas" }, stage);
     var ask = el("div", { id: "msrMmAsk", hidden: "" }, stage);
@@ -146,6 +147,7 @@
     ui.$("msrMmOk").textContent = t.ok;
     ui.$("msrMmEdit").textContent = t.mmNow.replace("{mm}", String(markerMm()));
     if (st && st.msgKey) msg(st.msgKey, st.msgErr);
+    if (st) warn(st.warnKey);
     if (st && st.points) refresh();
   }
 
@@ -154,6 +156,14 @@
     var m = ui.$("msrMsg");
     m.textContent = key ? (L()[key] || key) : "";
     m.className = isErr ? "err" : "";
+  }
+
+  // Отдельная строка предупреждения, чтобы не прятать подсказку по правке точек
+  function warn(key) {
+    if (st) st.warnKey = key || null;
+    var w = ui.$("msrWarn");
+    w.textContent = key ? (L()[key] || key) : "";
+    w.hidden = !key;
   }
 
   function askMm() {
@@ -198,6 +208,7 @@
     var token = {};
     freeState();
     st = { token: token, points: [], sel: -1, rect: null, img: null, photo: "", srcCanvas: null };
+    warn(null);
     ui.$("msrDone").disabled = true;
     msg("loading");
     draw();
@@ -240,7 +251,8 @@
         st.rectCanvas = rc;
         st.points = autoPoints();
         st.sel = -1;
-        msg(side < SMALL_PX ? "small" : "hint", side < SMALL_PX);
+        msg("hint");
+        warn(side < SMALL_PX ? "small" : null);
         refresh();
       } catch (e) { msg("fail", true); }
     }, 30);

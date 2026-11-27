@@ -48,18 +48,22 @@
   // Выпрямление: плоскость камня в мм -> пиксели, длинная сторона <= maxSide.
   function rectify(cv, mat, corners, markerMm, maxSide) {
     maxSide = maxSide || 1600;
-    var S = markerMm, src = pts32(cv, corners), dst = pts32(cv, [[0, 0], [S, 0], [S, S], [0, S]]);
+    // Квадрат маркера поворачиваем так же, как маркер висит на фото: тогда «верх» снимка остаётся верхом,
+    // даже если маркер повешен боком или наискось
+    var S = markerMm, th = Math.atan2(corners[1][1] - corners[0][1], corners[1][0] - corners[0][0]);
+    var ct = Math.cos(th), sn = Math.sin(th);
+    var sq = [[0, 0], [S, 0], [S, S], [0, S]].map(function (p) { return [p[0] * ct - p[1] * sn, p[0] * sn + p[1] * ct]; });
+    var src = pts32(cv, corners), dst = pts32(cv, sq);
     var H0 = cv.getPerspectiveTransform(src, dst), h = Array.from(H0.data64F);
     src.delete(); dst.delete(); H0.delete();
     var W = mat.cols, Ht = mat.rows;
     var fr = [[0, 0], [W, 0], [W, Ht], [0, Ht]].map(function (p) { return applyH(h, p); });
     // Углы кадра могут уйти очень далеко при сильном наклоне: ограничиваем рамку 30 сторонами маркера
-    var lim = S * 30, mx = (corners[0][0]), minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    var lim = S * 30, minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     fr.forEach(function (p) {
       var x = Math.max(-lim, Math.min(lim, p[0])), y = Math.max(-lim, Math.min(lim, p[1]));
       minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
     });
-    void mx;
     var spanX = maxX - minX, spanY = maxY - minY;
     var scale = maxSide / Math.max(spanX, spanY); // пикселей на мм
     var T = [scale, 0, -minX * scale, 0, scale, -minY * scale, 0, 0, 1];
