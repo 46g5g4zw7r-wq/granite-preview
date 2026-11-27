@@ -94,6 +94,10 @@ html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3
 html[data-theme="dark"] .tab[aria-selected="true"]{background:#15171a;color:#fff}
 html[data-theme="dark"] .kpi b{color:#e6c98f}
 html[data-theme="dark"] .kpi.warn b{color:#f0a860}
+.live{position:fixed;inset:0;z-index:50;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px}
+.live[hidden]{display:none}
+.live video{width:100%;max-width:640px;max-height:70vh;border-radius:12px;background:#111;object-fit:cover}
+.live-msg{color:#f4efe4;font-weight:700;text-align:center;margin:0}
 html[data-theme="dark"] .search,html[data-theme="dark"] .measure input{background:#1c1e22;color:#ece6da;border-color:#3d4047}
 html[data-theme="dark"] .btn,html[data-theme="dark"] .sm{background:#24262b;color:#ece6da;border-color:#3d4047}
 html[data-theme="dark"] .btn:hover,html[data-theme="dark"] .sm:hover{background:#2c2f35}
@@ -190,11 +194,18 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     <button type="button" class="btn" id="galBtn">Галерея</button>
     <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
     <input type="file" id="photoGal" accept="image/*" hidden>
-    <button type="button" class="btn" id="measureBtn">Измерить</button>
+    <button type="button" class="btn" id="measureBtn">Сканировать QR-код</button>
     <a class="btn" id="printBtn" href="print.html" target="_blank" rel="noopener"></a>
     <a class="btn" id="labelsBtn" href="labels.html" target="_blank" rel="noopener">🏷️ Печать QR</a>
     <button type="button" class="btn gold" id="add">+ Добавить</button>
   </section>
+
+  <div class="live" id="liveScan" hidden>
+    <video id="liveVid" muted autoplay></video>
+    <canvas id="liveCv" hidden></canvas>
+    <p class="live-msg" id="liveMsg"></p>
+    <button type="button" class="btn" id="liveClose">Закрыть</button>
+  </div>
 
   <nav class="seg" id="formSeg" aria-label="Тип">
     <button type="button" data-form="all" aria-pressed="true">Все</button>
@@ -276,7 +287,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       kind: { quartz: "кварц", granite: "гранит" },
       cell: "ячейка", move: "Переместить", photo: "Фото", sample: "Пример данных для превью — не настоящий склад.",
       camera: "Камера", gallery: "Галерея", reset: "Сбросить",
-      measure: "Измерить", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (дюймы).", mW: "Ширина, дюймы", mH: "Высота, дюймы", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
+      measure: "Сканировать QR-код", mTitle: "Размеры остатка", mNote: "Пока вводите вручную. На втором этапе программа найдёт маркер ArUco на фото и посчитает размеры сама (дюймы).", mW: "Ширина, дюймы", mH: "Высота, дюймы", mOk: "Подтвердить", mCancel: "Отмена", mBad: "Введите размеры больше нуля.", mSaved: "Превью: размеры не сохранены в базу.", foundTitle: "Похожие по цвету и рисунку (грубое сравнение)", photoErr: "Не удалось прочитать фото"
     },
     fr: {
       brand: "Stone Lock", role: "Bureau", logout: "Quitter",
@@ -287,7 +298,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       kind: { quartz: "quartz", granite: "granit" },
       cell: "emplacement", move: "Déplacer", photo: "Photo", sample: "Exemple de données pour l’aperçu — pas un vrai stock.",
       camera: "Appareil photo", gallery: "Galerie", reset: "Réinitialiser",
-      measure: "Mesurer", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (pouces).", mW: "Largeur, pouces", mH: "Hauteur, pouces", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
+      measure: "Scanner le QR", mTitle: "Dimensions de la chute", mNote: "Saisie manuelle pour l’instant. À la deuxième étape, le programme trouvera le marqueur ArUco sur la photo et calculera les dimensions (pouces).", mW: "Largeur, pouces", mH: "Hauteur, pouces", mOk: "Confirmer", mCancel: "Annuler", mBad: "Saisissez des dimensions supérieures à zéro.", mSaved: "Aperçu : dimensions non enregistrées dans la base.", foundTitle: "Similaires par couleur et veinage (comparaison approximative)", photoErr: "Impossible de lire la photo"
     },
     en: {
       brand: "Stone Warehouse", role: "Office", logout: "Sign out",
@@ -298,7 +309,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       kind: { quartz: "quartz", granite: "granite" },
       cell: "cell", move: "Move", photo: "Photo", sample: "Sample data for the preview — not a real warehouse.",
       camera: "Camera", gallery: "Gallery", reset: "Reset",
-      measure: "Measure", mTitle: "Remnant size", mNote: "Manual entry for now. In the second stage the app will find the ArUco marker in the photo and calculate the size (in).", mW: "Width, in", mH: "Height, in", mOk: "Confirm", mCancel: "Cancel", mBad: "Enter sizes greater than zero.", mSaved: "Preview: sizes are not saved to the database.", foundTitle: "Similar by colour and veining (rough comparison)", photoErr: "Could not read the photo"
+      measure: "Scan QR code", mTitle: "Remnant size", mNote: "Manual entry for now. In the second stage the app will find the ArUco marker in the photo and calculate the size (in).", mW: "Width, in", mH: "Height, in", mOk: "Confirm", mCancel: "Cancel", mBad: "Enter sizes greater than zero.", mSaved: "Preview: sizes are not saved to the database.", foundTitle: "Similar by colour and veining (rough comparison)", photoErr: "Could not read the photo"
     }
   };
 
@@ -350,10 +361,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   var photoGal = document.getElementById("photoGal");
 
   var UI = {
-    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать код", cam: "Камера", gal: "Галерея", measure: "Измерить", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
-    fr: { search: "Recherche par nom ou cellule", scan: "Scanner code", cam: "Appareil photo", gal: "Galerie", measure: "Mesurer", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
-    en: { search: "Search by name or cell", scan: "Scan code", cam: "Camera", gal: "Gallery", measure: "Measure", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
-    es: { search: "Buscar por nombre o celda", scan: "Escanear código", cam: "Cámara", gal: "Galería", measure: "Medir", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
+    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать код", cam: "Камера", gal: "Галерея", measure: "Сканировать QR-код", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
+    fr: { search: "Recherche par nom ou cellule", scan: "Scanner code", cam: "Appareil photo", gal: "Galerie", measure: "Scanner le QR", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
+    en: { search: "Search by name or cell", scan: "Scan code", cam: "Camera", gal: "Gallery", measure: "Scan QR code", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
+    es: { search: "Buscar por nombre o celda", scan: "Escanear código", cam: "Cámara", gal: "Galería", measure: "Escanear QR", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
   };
 
   function renderStatic() {
@@ -773,7 +784,13 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     var L = ITEM_T[lang] || ITEM_T.ru;
     foundThumb.src = url;
     found.hidden = false;
-    loadImg(url).then(readCodeFromImage).then(function (raw) {
+    loadImg(url).then(readCodeFromImage).then(handleScannedText).catch(function () { foundText.textContent = L.noQr; });
+  }
+  // Общая обработка прочитанного кода: фото или живой сканер
+  function handleScannedText(raw) {
+    var L = ITEM_T[lang] || ITEM_T.ru;
+    if (!raw) { found.hidden = false; foundText.textContent = L.noQr; return; }
+    (function () {
       var pl = parsePayload(raw);
       var code = pl ? pl.code : raw;
       var hit = code ? findCode(code) : null;
@@ -789,11 +806,11 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
         iErr.textContent = L.auto;
         return;
       }
-      if (!hit) { foundText.textContent = L.noQr; return; }
+      if (!hit) { found.hidden = false; foundText.textContent = L.noQr; return; }
       found.hidden = true;
       if (activeJob) { attachToJob(hit, activeJob); return; }
       openPick("job", hit);
-    }).catch(function () { foundText.textContent = L.noQr; });
+    })();
   }
 
   /* ---------- Измерение: заглушка первого этапа, размеры вводятся вручную ---------- */
@@ -801,17 +818,70 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   var mW = document.getElementById("mW");
   var mH = document.getElementById("mH");
   var mErr = document.getElementById("mErr");
-  document.getElementById("measureBtn").addEventListener("click", function () {
-    mW.value = ""; mH.value = ""; mErr.textContent = "";
-    measureSec.hidden = false;
-    mW.focus();
-  });
+  document.getElementById("measureBtn").addEventListener("click", function () { startLiveScan(); });
   document.getElementById("mCancel").addEventListener("click", function () { measureSec.hidden = true; });
   document.getElementById("mOk").addEventListener("click", function () {
     var w = parseFloat(mW.value), h = parseFloat(mH.value);
     if (!(w > 0) || !(h > 0)) { mErr.textContent = DICT[lang].mBad; return; }
     mErr.textContent = DICT[lang].mSaved;
   });
+
+  /* ---------- Живой сканер QR-кода с камеры ---------- */
+  var LIVE = {
+    ru: { aim: "Наведите камеру на QR-код на наклейке", nocam: "Камера недоступна. Разрешите камеру в настройках браузера или загрузите фото.", close: "Закрыть" },
+    fr: { aim: "Pointez la caméra sur le QR de l’étiquette", nocam: "Caméra indisponible. Autorisez la caméra dans le navigateur ou chargez une photo.", close: "Fermer" },
+    en: { aim: "Point the camera at the QR code on the label", nocam: "Camera unavailable. Allow camera access in the browser or upload a photo.", close: "Close" },
+    es: { aim: "Apunte la cámara al QR de la etiqueta", nocam: "Cámara no disponible. Permita la cámara en el navegador o suba una foto.", close: "Cerrar" }
+  };
+  var liveStream = null, liveTimer = 0;
+  function stopLive() {
+    clearTimeout(liveTimer);
+    if (liveStream) liveStream.getTracks().forEach(function (t) { t.stop(); });
+    liveStream = null;
+    var vid = document.getElementById("liveVid");
+    vid.srcObject = null;
+    document.getElementById("liveScan").hidden = true;
+  }
+  function startLiveScan() {
+    var T = LIVE[lang] || LIVE.ru;
+    var box = document.getElementById("liveScan"), vid = document.getElementById("liveVid"), msg = document.getElementById("liveMsg");
+    box.hidden = false;
+    msg.textContent = T.aim;
+    document.getElementById("liveClose").textContent = T.close;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg.textContent = T.nocam; return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
+      .then(function (st) {
+        liveStream = st;
+        vid.setAttribute("playsinline", "");
+        vid.srcObject = st;
+        return vid.play();
+      })
+      .then(function () { tickLive(); })
+      .catch(function () { msg.textContent = T.nocam; });
+  }
+  function tickLive() {
+    if (!liveStream) return;
+    var vid = document.getElementById("liveVid"), cv = document.getElementById("liveCv");
+    if (vid.readyState >= 2 && vid.videoWidth) {
+      // 960 px is plenty for a 17 mm label at arm's length and keeps phones responsive
+      var k = Math.min(1, 960 / Math.max(vid.videoWidth, vid.videoHeight));
+      cv.width = Math.round(vid.videoWidth * k);
+      cv.height = Math.round(vid.videoHeight * k);
+      var g = cv.getContext("2d", { willReadFrequently: true });
+      g.drawImage(vid, 0, 0, cv.width, cv.height);
+      var px = g.getImageData(0, 0, cv.width, cv.height);
+      var r = (typeof jsQR === "function") ? jsQR(px.data, cv.width, cv.height, { inversionAttempts: "attemptBoth" }) : null;
+      if (r && r.data) {
+        var text = String(r.data).trim();
+        stopLive();
+        handleScannedText(text);
+        return;
+      }
+    }
+    liveTimer = setTimeout(tickLive, 120);
+  }
+  document.getElementById("liveClose").addEventListener("click", stopLive);
+  window.addEventListener("pagehide", stopLive);
 
   document.getElementById("scan").addEventListener("click", function () {
     scanMode = true;
@@ -832,7 +902,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     sample: "Datos de ejemplo para la vista previa, no es un almacén real.",
     camera: "Cámara", gallery: "Galería", reset: "Restablecer",
     foundTitle: "Similares por color y veta (comparación aproximada)", photoErr: "No se pudo leer la foto",
-    measure: "Medir", mTitle: "Medidas de la pieza",
+    measure: "Escanear QR", mTitle: "Medidas de la pieza",
     mNote: "Por ahora se introduce a mano. En la segunda etapa la app encontrará el marcador ArUco en la foto y calculará las medidas (pulg.).",
     mW: "Ancho, pulg.", mH: "Alto, pulg.", mOk: "Confirmar", mCancel: "Cancelar",
     mBad: "Introduzca medidas mayores que cero.", mSaved: "Vista previa: las medidas no se guardan en la base."

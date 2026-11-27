@@ -18,11 +18,12 @@
   button.secondary { background:#fff; color:#8a6a2e; }
   .err { color:#b3261e; font-size:.9rem; grid-column:1 / -1; min-height:1em; }
   #sheet { margin-top:18px; display:flex; flex-wrap:wrap; gap:12px; }
-  .label { width:20mm; height:60mm; background:#fff; border:1px dashed #bbb; box-sizing:border-box; padding:1.5mm; display:flex; flex-direction:column; align-items:center; overflow:hidden; }
-  .label .qr { width:18mm; height:18mm; }
-  .label .qr img, .label .qr canvas { width:18mm !important; height:18mm !important; }
-  .label .code { font-weight:800; font-size:3.6mm; margin-top:1mm; letter-spacing:.2mm; }
-  .label .txt { font-size:2.4mm; line-height:1.25; text-align:center; word-break:break-word; margin-top:.8mm; }
+  .label { width:20mm; height:60mm; background:#fff; border:1px dashed #bbb; box-sizing:border-box; padding:.8mm; display:flex; flex-direction:column; align-items:center; overflow:hidden; }
+  /* 17 mm QR inside 18.4 mm of usable width: the QR image already has its own white quiet zone */
+  .label .qr { width:17mm; height:17mm; flex:0 0 auto; }
+  .label .qr img { width:17mm; height:17mm; display:block; }
+  .label .code { font-weight:800; font-size:3.8mm; margin-top:.8mm; letter-spacing:.2mm; }
+  .label .txt { font-size:2.7mm; line-height:1.2; text-align:center; word-break:break-word; margin-top:.6mm; }
   #sheet.sheet { display:grid; grid-template-columns:repeat(10, 20mm); gap:0; }
   #sheet.sheet .label { border:1px dashed #ccc; }
   @media print {
@@ -44,7 +45,7 @@
   <p class="note">Наклейка 20 × 60 мм, QR 18 мм. Печатайте в масштабе 100 %, без «По размеру страницы». Номера S-001… берутся из счётчика приложения, поэтому повторов не будет. В QR записаны номер, название, размер и ячейка.</p>
 
   <form id="f">
-    <label class="full">Название камня (необязательно)
+    <label class="full">Название камня (обязательно)
       <input id="name" type="text" maxlength="60" placeholder="Например: Silestone Raw G 3CM">
     </label>
     <label>Размер, дюймы (необязательно)
@@ -72,7 +73,7 @@
   <div id="sheet"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="vendor/qrcode.min.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -107,7 +108,8 @@
     var m = String(v || "").match(/(\d+(?:[.,]\d+)?)\s*[x×*Xх]\s*(\d+(?:[.,]\d+)?)/);
     return m ? m[1] + "x" + m[2] : "";
   }
-  function makeLabel(code, name, size, cell) {
+  // Payload: code|name|size|cell. Printed: QR, code, name, size, cell.
+  function makeLabel(code, name, size, cell, onReady) {
     var box = document.createElement("div");
     box.className = "label";
     var qr = document.createElement("div");
@@ -117,18 +119,20 @@
     c.className = "code";
     c.textContent = code;
     box.appendChild(c);
-    var lines = [name, size ? size + " in" : "", cell ? "яч. " + cell : ""].filter(Boolean);
-    if (lines.length) {
-      var t = document.createElement("div");
-      t.className = "txt";
-      t.textContent = lines.join("\n");
-      t.style.whiteSpace = "pre-line";
-      box.appendChild(t);
-    }
-    if (window.QRCode) {
-      var payload = [code, cleanPart(name), sizeForQr(size), cleanPart(cell)].join("|");
-      new QRCode(qr, { text: payload, width: 68, height: 68, correctLevel: QRCode.CorrectLevel.M });
-    }
+    var t = document.createElement("div");
+    t.className = "txt";
+    t.textContent = [name, size ? size + " in" : "", cell ? "яч. " + cell : ""].filter(Boolean).join("\n");
+    t.style.whiteSpace = "pre-line";
+    box.appendChild(t);
+    var payload = [code, cleanPart(name), sizeForQr(size), cleanPart(cell)].join("|");
+    // 600 px image, 4-module quiet zone, error correction M; shown at 17 mm so it prints sharp
+    QRCode.toDataURL(payload, { errorCorrectionLevel: "M", margin: 4, width: 600 }).then(function (url) {
+      var img = new Image();
+      img.alt = "";
+      img.src = url;
+      qr.appendChild(img);
+      if (onReady) onReady(box);
+    });
     return box;
   }
 
@@ -136,9 +140,10 @@
     err.textContent = "";
     var n = parseInt($("count").value, 10);
     if (!n || n < 1 || n > 50) { err.textContent = "Введите число от 1 до 50."; return; }
+    var name = $("name").value.trim(), size = $("size").value.trim(), cell = $("cell").value.trim();
+    if (!name) { err.textContent = "Введите название камня: оно печатается на наклейке и попадает в QR."; return; }
     var codes = takeCodes(n);
     if (!codes) { err.textContent = "Не удалось сохранить счётчик номеров. Проверьте настройки браузера."; return; }
-    var name = $("name").value.trim(), size = $("size").value.trim(), cell = $("cell").value.trim();
     sheet.innerHTML = "";
     codes.forEach(function (c) { sheet.appendChild(makeLabel(c, name, size, cell)); });
   });
