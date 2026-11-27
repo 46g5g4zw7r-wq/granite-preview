@@ -111,12 +111,12 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
       }
     });
 
-    await step("office sees stock and catalog, no scanner / camera / add / staff", async function () {
+    await step("office sees stock and catalog, no scanner / camera / staff", async function () {
       await p.evaluate(function () { window.SlabAuth.logout(); });
       await home("ru"); await signIn("#goOffice", "olya@x.ca", "temp12345");
       await p.fill("#newPw", "olyapass1"); await p.fill("#newPw2", "olyapass1"); await p.click("#submitBtn");
       await p.waitForURL(/app\.html\?s=office/, { timeout: 15000 }); await p.waitForTimeout(400);
-      for (var id of ["#scan", "#camBtn", "#galBtn", "#measureBtn", "#add"]) assert.ok(!(await p.isVisible(id)), id + " visible in office");
+      for (var id of ["#scan", "#camBtn", "#galBtn", "#measureBtn"]) assert.ok(!(await p.isVisible(id)), id + " visible in office");
       assert.ok(await p.isVisible("text=Каталог"), "no catalog tab");
       assert.ok(!(await p.isVisible("text=Персонал")), "staff tab visible in office");
     });
@@ -146,6 +146,35 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
       await p.click('.lang button[data-lang="en"]');
       assert.ok(/Sign out/i.test(await p.textContent("#logoutBtn")), await p.textContent("#logoutBtn"));
       assert.ok(/trial/i.test(await p.textContent("#trialBar")), await p.textContent("#trialBar"));
+    });
+  }
+
+  if (!ONLY_HOME) {
+    await step("admin can open the Office and Shop floor sections from the header", async function () {
+      await home("ru"); await signIn("#goAdmin", null, "adminpass1");
+      await p.waitForURL(/app\.html\?s=admin/, { timeout: 15000 }); await p.waitForTimeout(300);
+      await p.click("#secOffice"); await p.waitForURL(/app\.html\?s=office/, { timeout: 5000 }); await p.waitForTimeout(300);
+      assert.ok(await p.isVisible("#labelsBtn"), "QR labels not reachable for admin");
+      await p.click("#secShop"); await p.waitForURL(/app\.html\?s=shop/, { timeout: 5000 }); await p.waitForTimeout(300);
+      assert.ok(await p.isVisible("#shopAdd"), "shop tools not reachable for admin");
+    });
+
+    await step("office can record incoming pieces by hand (no camera buttons)", async function () {
+      await p.goto(B + "app.html?s=office"); await p.waitForTimeout(300);
+      assert.ok(await p.isVisible("#add"), "no + Add in office");
+      await p.click("#add"); await p.waitForTimeout(200);
+      assert.ok(await p.isVisible("#iName"), "form not open");
+      assert.ok(!(await p.isVisible("#iMeasure")) && !(await p.isVisible("#iScan")), "camera actions shown in office");
+    });
+
+    await step("after the trial ends: pay screen opens and adding is locked everywhere", async function () {
+      await p.evaluate(function () { localStorage.setItem("granite.trialStart", String(Date.now() - 31 * 86400000)); localStorage.removeItem("granite.trialExt"); });
+      await p.goto(B + "app.html?s=office"); await p.waitForTimeout(400);
+      assert.ok(await p.isVisible("#payScreen"), "pay screen not shown in office");
+      assert.ok(!(await p.isVisible("#add")), "+ Add still available in office");
+      await p.goto(B + "app.html?s=shop"); await p.waitForTimeout(400);
+      assert.ok(!(await p.isVisible("#shopAdd")) && !(await p.isVisible("#shopMeasure")), "shop can still add after trial");
+      await p.evaluate(function () { localStorage.setItem("granite.trialStart", String(Date.now())); });
     });
   }
 

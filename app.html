@@ -101,17 +101,21 @@ main{padding:20px 18px 40px;max-width:1280px;margin:0 auto;display:flex;flex-dir
 .staffform label{display:grid;gap:4px;font-size:.85rem;font-weight:600}
 .staffform input,.staffform select{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card,#fff);color:inherit}
 .staffform .mnote{grid-column:1/-1;margin:0}
+.secnav{display:inline-flex;gap:6px;margin-left:10px}
+.secnav[hidden]{display:none}
+.secnav a{font-size:.8rem;font-weight:700;color:#e2c48c;text-decoration:none;padding:4px 9px;border:1px solid rgba(226,196,140,.45);border-radius:999px}
+.secnav a[aria-current="page"]{background:#a87f3a;color:#fff;border-color:#8a6a2e}
 .who{font-size:.85rem;color:#d8d2c4;margin-left:10px;white-space:nowrap}
 .shopbar{display:none}
 html.sec-shop .shopbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:6px 0 14px}
 .shopbtn{font:inherit;font-weight:700;font-size:1.05rem;min-height:84px;border-radius:16px;border:1px solid var(--line,#d9d2c4);background:var(--card,#fff);color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;text-decoration:none;box-shadow:0 2px 0 rgba(0,0,0,.08)}
 .shopbtn.gold{background:linear-gradient(180deg,#d9b276,#a87f3a);color:#fff;border-color:#8a6a2e}
 html.sec-shop #tabs,html.sec-shop .toolbar .btn,html.sec-shop #printBtn,html.sec-shop #labelsBtn,html.sec-shop #companyBox{display:none!important}
-html.sec-office #scan,html.sec-office #camBtn,html.sec-office #galBtn,html.sec-office #measureBtn,html.sec-office #add,html.sec-office #itemForm,html.sec-office #liveScan{display:none!important}
+html.sec-office #scan,html.sec-office #camBtn,html.sec-office #galBtn,html.sec-office #measureBtn,html.sec-office #liveScan,html.sec-office #iScan,html.sec-office #iMeasure{display:none!important}
 .trial{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:8px 14px;background:#f6ecd8;color:#5b4520;font-size:.9rem;border-bottom:1px solid #e2cfa4}
 .trial[hidden]{display:none}
 html[data-theme="dark"] .trial{background:#2c2618;color:#f1dfb6;border-color:#4a3e25}
-html.trial-over .toolbar #add,html.trial-over .shopbar #shopAdd,html.trial-over .shopbar #shopMeasure{display:none!important}
+html.trial-over #add,html.trial-over #itemForm,html.trial-over #scan,html.trial-over #shopAdd,html.trial-over #shopMeasure,html.trial-over #shopScan,html.trial-over .card .actions{display:none!important}
 .payscreen{position:fixed;inset:0;z-index:150;background:rgba(10,10,12,.7);display:flex;align-items:center;justify-content:center;padding:20px}
 .payscreen[hidden]{display:none}
 .payscreen>div{background:var(--card,#fff);color:inherit;border-radius:18px;max-width:420px;padding:22px;display:grid;gap:12px;text-align:center}
@@ -217,7 +221,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 
 <header class="top">
   <div class="brand"><i></i><span id="brand">Slabwise</span><button type="button" class="role" id="role" title="Переключить роль (превью)">Производство</button>
-    <span class="rhint" id="roleHint"></span><span class="who" id="who"></span></div>
+    <span class="rhint" id="roleHint"></span><span class="who" id="who"></span><span class="secnav" id="secNav" hidden><a id="secOffice" href="app.html?s=office"></a><a id="secShop" href="app.html?s=shop"></a><a id="secAdmin" href="app.html?s=admin"></a></span></div>
   <div class="right">
     <nav class="lang notranslate" translate="no" aria-label="Язык">
       <button type="button" data-lang="ru" aria-pressed="true">RU</button>
@@ -1796,7 +1800,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   }
 
   // Пробный период: 30 дней с первого входа, +30 один раз, если на складе 50+ кусков (только показ)
-  var TRIAL_START = "granite.trialStart", TRIAL_EXT = "granite.trialExt", DAY = 86400000;
+  var TRIAL_START = "granite.trialStart", TRIAL_EXT = "granite.trialExt", DAY = 86400000, payShown = false;
   function trialDaysLeft() {
     var st = 0; try { st = parseInt(localStorage.getItem(TRIAL_START), 10) || 0; } catch (e) {}
     if (!st) { st = Date.now(); try { localStorage.setItem(TRIAL_START, String(st)); } catch (e) {} }
@@ -1805,8 +1809,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   }
   function renderTrial() {
     var bar = document.getElementById("trialBar");
-    if (SECTION === "shop") { bar.hidden = true; return; }
     var t = ST(), d = trialDaysLeft(), ext = false;
+    document.documentElement.classList.toggle("trial-over", d <= 0); // «только просмотр» во всех разделах
+    if (SECTION === "shop") { bar.hidden = true; return; }
+    if (d <= 0 && !payShown) { payShown = true; document.getElementById("payScreen").hidden = false; }
     try { ext = localStorage.getItem(TRIAL_EXT) === "1"; } catch (e) {}
     bar.hidden = false;
     document.getElementById("trialTxt").textContent = d > 0 ? t.trial.replace("{d}", d) : t.trialEnd;
@@ -1835,6 +1841,13 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   function sectionLabels() {
     var t = ST(), ses = window.SlabAuth.session() || {};
     document.getElementById("who").textContent = (ses.name ? ses.name + " · " : "") + t[SECTION];
+    var nav = document.getElementById("secNav");
+    nav.hidden = !ses.admin;
+    [["secOffice", "office"], ["secShop", "shop"], ["secAdmin", "admin"]].forEach(function (x) {
+      var a = document.getElementById(x[0]); a.textContent = t[x[1]];
+      if (x[1] === SECTION) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    if (ses.admin) document.getElementById("who").textContent = "";
     document.getElementById("shopScan").textContent = t.scan;
     document.getElementById("shopAdd").textContent = t.add;
     document.getElementById("shopMeasure").textContent = t.measure;

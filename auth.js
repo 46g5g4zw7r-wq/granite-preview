@@ -93,6 +93,7 @@
     var person = find(email);
     if (!person) return Promise.resolve({ ok: false, reason: "nouser" });
     if (String(newPw || "").length < MIN_PW) return Promise.resolve({ ok: false, reason: "short" });
+    if (newPw === oldPw) return Promise.resolve({ ok: false, reason: "same" }); // временный пароль знает админ
     var pws = read(ls, PW_KEY, {});
     return check(pws[person.email], oldPw).then(function (ok) {
       if (!ok) return { ok: false, reason: "wrong" };

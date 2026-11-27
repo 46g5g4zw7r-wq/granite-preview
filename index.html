@@ -603,28 +603,28 @@ body.login-open .center{z-index:60}
           firstAdmin: "Первый вход администратора: придумайте пароль (не меньше 8 символов).",
           mustChange: "Это временный пароль от администратора. Придумайте свой (не меньше 8 символов).",
           other: "Ваш раздел — {s}. Войдите через кнопку «{s}».", wrongCred: "Неверный e-mail или пароль.",
-          short: "Пароль должен быть не короче 8 символов.", mismatch: "Пароли не совпадают.", wait: "Проверяю…",
+          short: "Пароль должен быть не короче 8 символов.", same: "Новый пароль должен отличаться от временного.", mismatch: "Пароли не совпадают.", wait: "Проверяю…",
           proto: "Прототип: учётные записи хранятся только в этом браузере.",
           forgot: "Сброс пароля по e-mail появится после подключения Supabase. Пока обратитесь к администратору." },
     fr: { office: "Bureau", admin: "Admin", shop: "Atelier", pw2: "Répétez le mot de passe", newPw: "Nouveau mot de passe", newPw2: "Répétez le nouveau mot de passe",
           firstAdmin: "Première connexion de l’administrateur : choisissez un mot de passe (8 caractères minimum).",
           mustChange: "C’est un mot de passe temporaire de l’administrateur. Choisissez le vôtre (8 caractères minimum).",
           other: "Votre section : {s}. Connectez-vous avec le bouton « {s} ».", wrongCred: "E-mail ou mot de passe incorrect.",
-          short: "Le mot de passe doit contenir au moins 8 caractères.", mismatch: "Les mots de passe ne correspondent pas.", wait: "Vérification…",
+          short: "Le mot de passe doit contenir au moins 8 caractères.", same: "Le nouveau mot de passe doit être différent du temporaire.", mismatch: "Les mots de passe ne correspondent pas.", wait: "Vérification…",
           proto: "Prototype : les comptes sont enregistrés uniquement dans ce navigateur.",
           forgot: "La réinitialisation par e-mail arrivera avec Supabase. En attendant, contactez l’administrateur." },
     en: { office: "Office", admin: "Admin", shop: "Shop floor", pw2: "Repeat password", newPw: "New password", newPw2: "Repeat new password",
           firstAdmin: "First administrator sign-in: choose a password (at least 8 characters).",
           mustChange: "This is a temporary password from the administrator. Choose your own (at least 8 characters).",
           other: "Your section is {s}. Sign in with the “{s}” button.", wrongCred: "Wrong e-mail or password.",
-          short: "The password must be at least 8 characters.", mismatch: "Passwords do not match.", wait: "Checking…",
+          short: "The password must be at least 8 characters.", same: "The new password must differ from the temporary one.", mismatch: "Passwords do not match.", wait: "Checking…",
           proto: "Prototype: accounts are stored only in this browser.",
           forgot: "Password reset by e-mail comes with Supabase. For now, ask the administrator." },
     es: { office: "Oficina", admin: "Admin", shop: "Taller", pw2: "Repita la contraseña", newPw: "Contraseña nueva", newPw2: "Repita la contraseña nueva",
           firstAdmin: "Primer acceso del administrador: elija una contraseña (mínimo 8 caracteres).",
           mustChange: "Es una contraseña temporal del administrador. Elija la suya (mínimo 8 caracteres).",
           other: "Su sección es {s}. Entre con el botón «{s}».", wrongCred: "E-mail o contraseña incorrectos.",
-          short: "La contraseña debe tener al menos 8 caracteres.", mismatch: "Las contraseñas no coinciden.", wait: "Comprobando…",
+          short: "La contraseña debe tener al menos 8 caracteres.", same: "La contraseña nueva debe ser distinta de la temporal.", mismatch: "Las contraseñas no coinciden.", wait: "Comprobando…",
           proto: "Prototipo: las cuentas se guardan solo en este navegador.",
           forgot: "El restablecimiento por e-mail llegará con Supabase. Mientras tanto, consulte al administrador." }
   };
@@ -729,7 +729,8 @@ body.login-open .center{z-index:60}
       if (np.length < A.MIN_PW) return fail(T.short);
       if (np !== $("newPw2").value) return fail(T.mismatch);
       submitBtn.disabled = true; errEl.textContent = T.wait;
-      A.changePw(cur.email, cur.pw, np).then(function (r) { if (r.ok) go(r.section); else fail(T.wrongCred); });
+      if (np === cur.pw) return fail(T.same);
+      A.changePw(cur.email, cur.pw, np).then(function (r) { if (r.ok) go(r.section); else fail(r.reason === "same" ? T.same : T.wrongCred); });
       return;
     }
     var mail = cur.section === "admin" ? "" : $("email").value.trim();

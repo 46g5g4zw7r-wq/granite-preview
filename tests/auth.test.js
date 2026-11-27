@@ -77,6 +77,13 @@ test("duplicate email is refused", async function () {
   await assert.rejects(A.addStaff({ name: "Оля2", position: "", email: "OLYA@x.ca", shift: "", section: "shop", tempPw: "temp12345" }));
 });
 
+test("new password must differ from the temporary one", async function () {
+  reset();
+  await A.addStaff({ name: "Оля", position: "", email: "olya@x.ca", shift: "", section: "office", tempPw: "temp12345" });
+  var r = await A.changePw("olya@x.ca", "temp12345", "temp12345");
+  assert.strictEqual(r.ok, false); assert.strictEqual(r.reason, "same");
+});
+
 (async function () {
   var fails = 0;
   for (var t of tests) { try { await t[1](); console.log("PASS", t[0]); } catch (e) { fails++; console.log("FAIL", t[0], "-", e.message); } }
