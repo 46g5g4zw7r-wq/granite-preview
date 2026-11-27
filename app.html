@@ -197,7 +197,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     <input type="file" id="photoGal" accept="image/*" hidden>
     <button type="button" class="btn" id="measureBtn">Сканировать QR-код</button>
     <a class="btn" id="printBtn" href="print.html" target="_blank" rel="noopener"></a>
-    <a class="btn" id="labelsBtn" href="labels.html" target="_blank" rel="noopener">🏷️ Печать QR</a>
+    <a class="btn" id="labelsBtn" href="labels.html" target="_blank" rel="noopener">🏷️ <span id="labelsTxt">Печать QR</span></a>
     <button type="button" class="btn gold" id="add">+ Добавить</button>
   </section>
 
@@ -363,10 +363,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   var photoGal = document.getElementById("photoGal");
 
   var UI = {
-    ru: { search: "Поиск по названию или ячейке", scan: "Сканировать код", cam: "Камера", gal: "Галерея", measure: "Сканировать QR-код", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
-    fr: { search: "Recherche par nom ou cellule", scan: "Scanner code", cam: "Appareil photo", gal: "Galerie", measure: "Scanner le QR", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
-    en: { search: "Search by name or cell", scan: "Scan code", cam: "Camera", gal: "Gallery", measure: "Scan QR code", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
-    es: { search: "Buscar por nombre o celda", scan: "Escanear código", cam: "Cámara", gal: "Galería", measure: "Escanear QR", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
+    ru: { labels: "Печать QR", search: "Поиск по названию или ячейке", scan: "Сканировать код", cam: "Камера", gal: "Галерея", measure: "Сканировать QR-код", add: "+ Добавить", logout: "Выйти", theme: "Тема", langLbl: "Язык", printLink: "Как распечатать маркер" },
+    fr: { labels: "Imprimer les QR", search: "Recherche par nom ou cellule", scan: "Scanner code", cam: "Appareil photo", gal: "Galerie", measure: "Scanner le QR", add: "+ Ajouter", logout: "Quitter", theme: "Thème", langLbl: "Langue", printLink: "Comment imprimer le marqueur" },
+    en: { labels: "Print QR", search: "Search by name or cell", scan: "Scan code", cam: "Camera", gal: "Gallery", measure: "Scan QR code", add: "+ Add", logout: "Sign out", theme: "Theme", langLbl: "Language", printLink: "How to print the marker" },
+    es: { labels: "Imprimir QR", search: "Buscar por nombre o celda", scan: "Escanear código", cam: "Cámara", gal: "Galería", measure: "Escanear QR", add: "+ Añadir", logout: "Salir", theme: "Tema", langLbl: "Idioma", printLink: "Cómo imprimir el marcador" }
   };
 
   function renderStatic() {
@@ -381,6 +381,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     document.getElementById("camBtn").textContent = U.cam;
     document.getElementById("galBtn").textContent = U.gal;
     document.getElementById("measureBtn").textContent = U.measure;
+    document.getElementById("labelsTxt").textContent = U.labels;
     document.getElementById("add").textContent = U.add;
     document.getElementById("logout").textContent = U.logout;
     document.getElementById("themeBtn").title = U.theme;
