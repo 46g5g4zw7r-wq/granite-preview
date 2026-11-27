@@ -40,8 +40,13 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
     var p = await ctx.newPage(), bad = [];
     p.on("console", function (m) { if (/Content Security Policy|Refused to/.test(m.text())) bad.push(m.text().slice(0, 160)); });
     p.on("pageerror", function (e) { bad.push("pageerror: " + e.message); });
-    for (var pg of PAGES) { await p.goto("http://localhost:8768/" + pg); await p.waitForTimeout(400); }
-    await p.goto("http://localhost:8768/app.html"); await p.waitForTimeout(500);
+    await p.goto("http://localhost:8768/print.html");
+    await p.evaluate(function () { sessionStorage.setItem("granite.session", JSON.stringify({ section: "admin", admin: true, email: "", name: "" })); });
+    for (var pg of PAGES.filter(function (x) { return x !== "index.html"; })) { await p.goto("http://localhost:8768/" + pg + (pg === "app.html" ? "?s=office" : "")); await p.waitForTimeout(400); }
+    await p.goto("http://localhost:8768/index.html"); await p.waitForTimeout(400);
+    await p.goto("http://localhost:8768/print.html");
+    await p.evaluate(function () { sessionStorage.setItem("granite.session", JSON.stringify({ section: "admin", admin: true, email: "", name: "" })); });
+    await p.goto("http://localhost:8768/app.html?s=office"); await p.waitForTimeout(500);
     var libs = await p.evaluate(function () {
       return [typeof window.jsQR, !!(window.ZXing && window.ZXing.BrowserMultiFormatReader), !!(window.QRCode && window.QRCode.CorrectLevel)];
     });

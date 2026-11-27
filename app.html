@@ -5,6 +5,16 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' data:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
+<script src="auth.js"></script>
+<script>
+// Раздел из адреса: app.html?s=office|shop|admin. Без входа в этот раздел — на главную.
+(function () {
+  var s = new URLSearchParams(location.search).get("s") || "";
+  if (!window.SlabAuth || !window.SlabAuth.can(s)) { document.documentElement.style.display = "none"; location.replace("index.html"); return; }
+  document.documentElement.classList.add("sec-" + s);
+  document.documentElement.setAttribute("data-section", s);
+})();
+</script>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -86,6 +96,25 @@ main{padding:20px 18px 40px;max-width:1280px;margin:0 auto;display:flex;flex-dir
 .found p{margin:0;flex:1;font-weight:600;color:var(--granite-800);min-width:180px}
 .measure{background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:10px;max-width:460px}
 .measure[hidden]{display:none}
+#role,#roleHint{display:none!important}
+.staffform{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:16px;align-items:end}
+.staffform label{display:grid;gap:4px;font-size:.85rem;font-weight:600}
+.staffform input,.staffform select{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card,#fff);color:inherit}
+.staffform .mnote{grid-column:1/-1;margin:0}
+.who{font-size:.85rem;color:#d8d2c4;margin-left:10px;white-space:nowrap}
+.shopbar{display:none}
+html.sec-shop .shopbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:6px 0 14px}
+.shopbtn{font:inherit;font-weight:700;font-size:1.05rem;min-height:84px;border-radius:16px;border:1px solid var(--line,#d9d2c4);background:var(--card,#fff);color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;text-decoration:none;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+.shopbtn.gold{background:linear-gradient(180deg,#d9b276,#a87f3a);color:#fff;border-color:#8a6a2e}
+html.sec-shop #tabs,html.sec-shop .toolbar .btn,html.sec-shop #printBtn,html.sec-shop #labelsBtn,html.sec-shop #companyBox{display:none!important}
+html.sec-office #scan,html.sec-office #camBtn,html.sec-office #galBtn,html.sec-office #measureBtn,html.sec-office #add,html.sec-office #itemForm,html.sec-office #liveScan{display:none!important}
+.trial{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:8px 14px;background:#f6ecd8;color:#5b4520;font-size:.9rem;border-bottom:1px solid #e2cfa4}
+.trial[hidden]{display:none}
+html[data-theme="dark"] .trial{background:#2c2618;color:#f1dfb6;border-color:#4a3e25}
+html.trial-over .toolbar #add,html.trial-over .shopbar #shopAdd,html.trial-over .shopbar #shopMeasure{display:none!important}
+.payscreen{position:fixed;inset:0;z-index:150;background:rgba(10,10,12,.7);display:flex;align-items:center;justify-content:center;padding:20px}
+.payscreen[hidden]{display:none}
+.payscreen>div{background:var(--card,#fff);color:inherit;border-radius:18px;max-width:420px;padding:22px;display:grid;gap:12px;text-align:center}
 html.is-admin #scan,html.is-admin #camBtn,html.is-admin #galBtn,html.is-admin #measureBtn,html.is-admin #printBtn,html.is-admin #labelsBtn,html.is-admin #add,html.is-admin #itemForm,html.is-admin #liveScan,html.is-admin #found{display:none!important}
 .measure.itemwrap{max-width:1100px;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:22px;align-items:start}
 .itemwrap .iform{display:grid;gap:10px}
@@ -188,7 +217,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 
 <header class="top">
   <div class="brand"><i></i><span id="brand">Slabwise</span><button type="button" class="role" id="role" title="Переключить роль (превью)">Производство</button>
-    <span class="rhint" id="roleHint"></span></div>
+    <span class="rhint" id="roleHint"></span><span class="who" id="who"></span></div>
   <div class="right">
     <nav class="lang notranslate" translate="no" aria-label="Язык">
       <button type="button" data-lang="ru" aria-pressed="true">RU</button>
@@ -197,10 +226,12 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       <button type="button" data-lang="es" aria-pressed="false">ES</button>
     </nav>
     <button type="button" class="theme" id="themeBtn" aria-label="Тема" title="Тема"></button>
-    <a class="logout" href="index.html" id="logout">Выйти</a>
+    <a class="logout" href="index.html" id="logoutBtn">Выйти</a>
   </div>
 </header>
 
+<div class="trial" id="trialBar" hidden><span id="trialTxt"></span><button type="button" class="btn sm" id="trialMore"></button><button type="button" class="btn sm gold" id="trialPay"></button></div>
+<section class="payscreen" id="payScreen" hidden role="dialog" aria-modal="true"><div><h2 id="payTitle"></h2><p id="payText"></p><button type="button" class="btn gold" id="payBtn"></button><p class="mnote" id="payNote"></p><button type="button" class="btn" id="payClose"></button></div></section>
 <nav class="tabs" role="tablist" id="tabs"></nav>
 
 <main>
@@ -218,6 +249,12 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     <a class="btn" id="printBtn" href="print.html" target="_blank" rel="noopener"></a>
     <a class="btn" id="labelsBtn" href="labels.html" target="_blank" rel="noopener">🏷️ <span id="labelsTxt">Печать QR</span></a>
     <button type="button" class="btn gold" id="add">+ Добавить</button>
+  </section>
+  <section class="shopbar" id="shopBar">
+    <button type="button" class="shopbtn" id="shopScan"></button>
+    <button type="button" class="shopbtn gold" id="shopAdd"></button>
+    <button type="button" class="shopbtn" id="shopMeasure"></button>
+    <a class="shopbtn" id="shopWork" href="worker.html"></a>
   </section>
 
   <div class="live" id="liveScan" hidden>
@@ -375,7 +412,8 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   var matches = null;
   var currentTab = 0;
   var activeJob = "";
-  var admin = false;
+  var SECTION = document.documentElement.getAttribute("data-section") || "office";
+  var admin = SECTION === "admin";
   var scanMode = false;
   var formFilter = "all";
   // Пример: какие позиции в превью — остатки. В приложении признак задаётся при приходе.
@@ -408,7 +446,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     document.getElementById("measureBtn").textContent = U.measure;
     document.getElementById("labelsTxt").textContent = U.labels;
     document.getElementById("add").textContent = U.add;
-    document.getElementById("logout").textContent = U.logout;
+    document.getElementById("logoutBtn").textContent = U.logout;
     document.getElementById("themeBtn").title = U.theme;
     document.getElementById("themeBtn").setAttribute("aria-label", U.theme);
     document.querySelector(".lang").setAttribute("aria-label", U.langLbl);
@@ -424,7 +462,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       b.textContent = label + " · " + counts[key];
       b.setAttribute("aria-pressed", String(formFilter === key));
     });
-    document.getElementById("logout").textContent = T.logout;
+    document.getElementById("logoutBtn").textContent = T.logout;
     document.getElementById("search").placeholder = T.search;
     document.getElementById("scan").textContent = T.scan;
     document.getElementById("add").textContent = T.add;
@@ -448,8 +486,10 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       b.type = "button"; b.className = "tab"; b.setAttribute("role", "tab");
       b.setAttribute("aria-selected", String(i === currentTab));
       b.textContent = name;
+      if (SECTION === "office" && i === 4) b.hidden = true;
       tabs.appendChild(b);
     });
+    sectionLabels();
 
     var low = ITEMS.filter(function (x) { return x.st === "low"; }).length;
     var kpis = document.getElementById("kpis");
@@ -1235,6 +1275,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     var V = VIEWS[lang][i];
     var box = document.getElementById("view");
     box.innerHTML = "";
+    if (i === 4) { renderStaffView(box); return; }
     var h = document.createElement("h2");
     h.className = "view-title";
     h.textContent = V.title;
@@ -1667,8 +1708,150 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   [1, 2, 3].forEach(function (i) {
     ["ru", "fr", "en", "es"].forEach(function (l) { if (VIEWS[l] && VIEWS[l][i]) VIEWS[l][i].rows = []; });
   });
+
+  /* ---------- Разделы: Офис / Цех / Админ, сотрудники, пробный период (прототип) ---------- */
+  var SECT_T = {
+    ru: { office: "Офис", shop: "Цех", admin: "Админ", scan: "📷 Сканировать QR", add: "+ Добавить кусок", measure: "📐 Сфотографировать и измерить", work: "✅ Отметка работы",
+          staffTitle: "Сотрудники", name: "Имя", email: "E-mail", section: "Раздел", position: "Должность", shift: "Смена", tempPw: "Временный пароль (от 8 символов)",
+          addBtn: "Добавить сотрудника", del: "Удалить", empty: "Пока никого. Добавьте сотрудника: он войдёт по e-mail и временному паролю и сразу придумает свой.",
+          eEmail: "Проверьте e-mail.", eExists: "Сотрудник с таким e-mail уже есть.", eShort: "Временный пароль — не меньше 8 символов.", eName: "Введите имя.", added: "Добавлен: {n}. Передайте ему e-mail и временный пароль.",
+          proto: "Прототип: сотрудники хранятся в этом браузере, войти они смогут только на этом устройстве (до Supabase).",
+          trial: "Пробный период: осталось {d} дн.", trialEnd: "Пробный период закончился", more: "Нужно больше времени", moreTip: "Продление на месяц — после 50 кусков на складе", pay: "Оплатить",
+          payTitle: "Пробный период закончился", payText: "Данные сохранены. Чтобы снова добавлять и списывать куски, оплатите подписку.", payNote: "Прототип: настоящая оплата появится вместе с Supabase и Stripe.", close: "Закрыть", extended: "Пробный период продлён на месяц." },
+    fr: { office: "Bureau", shop: "Atelier", admin: "Admin", scan: "📷 Scanner le QR", add: "+ Ajouter une pièce", measure: "📐 Photographier et mesurer", work: "✅ Pointage du travail",
+          staffTitle: "Employés", name: "Nom", email: "E-mail", section: "Section", position: "Poste", shift: "Équipe", tempPw: "Mot de passe temporaire (8 car. min.)",
+          addBtn: "Ajouter l’employé", del: "Supprimer", empty: "Personne pour l’instant. Ajoutez un employé : il se connecte avec son e-mail et le mot de passe temporaire, puis choisit le sien.",
+          eEmail: "Vérifiez l’e-mail.", eExists: "Un employé avec cet e-mail existe déjà.", eShort: "Mot de passe temporaire : 8 caractères minimum.", eName: "Saisissez le nom.", added: "Ajouté : {n}. Donnez-lui l’e-mail et le mot de passe temporaire.",
+          proto: "Prototype : les employés sont enregistrés dans ce navigateur et ne peuvent se connecter que sur cet appareil (avant Supabase).",
+          trial: "Période d’essai : encore {d} j.", trialEnd: "La période d’essai est terminée", more: "Besoin de plus de temps", moreTip: "Prolongation d’un mois après 50 pièces en stock", pay: "Payer",
+          payTitle: "La période d’essai est terminée", payText: "Vos données sont conservées. Pour ajouter et sortir des pièces, payez l’abonnement.", payNote: "Prototype : le vrai paiement arrivera avec Supabase et Stripe.", close: "Fermer", extended: "Période d’essai prolongée d’un mois." },
+    en: { office: "Office", shop: "Shop floor", admin: "Admin", scan: "📷 Scan QR", add: "+ Add piece", measure: "📐 Take photo and measure", work: "✅ Work check-in",
+          staffTitle: "Staff", name: "Name", email: "E-mail", section: "Section", position: "Position", shift: "Shift", tempPw: "Temporary password (8+ characters)",
+          addBtn: "Add employee", del: "Delete", empty: "Nobody yet. Add an employee: they sign in with their e-mail and the temporary password, then choose their own.",
+          eEmail: "Check the e-mail.", eExists: "An employee with this e-mail already exists.", eShort: "Temporary password: at least 8 characters.", eName: "Enter the name.", added: "Added: {n}. Give them the e-mail and temporary password.",
+          proto: "Prototype: staff are stored in this browser and can sign in only on this device (until Supabase).",
+          trial: "Free trial: {d} days left", trialEnd: "The free trial has ended", more: "Need more time", moreTip: "One-month extension after 50 pieces in stock", pay: "Pay",
+          payTitle: "The free trial has ended", payText: "Your data is kept. To add and take out pieces again, pay for the subscription.", payNote: "Prototype: real payment comes with Supabase and Stripe.", close: "Close", extended: "Free trial extended by one month." },
+    es: { office: "Oficina", shop: "Taller", admin: "Admin", scan: "📷 Escanear QR", add: "+ Añadir pieza", measure: "📐 Fotografiar y medir", work: "✅ Registro de trabajo",
+          staffTitle: "Empleados", name: "Nombre", email: "E-mail", section: "Sección", position: "Puesto", shift: "Turno", tempPw: "Contraseña temporal (mín. 8 caracteres)",
+          addBtn: "Añadir empleado", del: "Eliminar", empty: "Todavía no hay nadie. Añada un empleado: entra con su e-mail y la contraseña temporal y luego elige la suya.",
+          eEmail: "Revise el e-mail.", eExists: "Ya existe un empleado con este e-mail.", eShort: "Contraseña temporal: mínimo 8 caracteres.", eName: "Introduzca el nombre.", added: "Añadido: {n}. Dele el e-mail y la contraseña temporal.",
+          proto: "Prototipo: los empleados se guardan en este navegador y solo pueden entrar en este dispositivo (hasta Supabase).",
+          trial: "Periodo de prueba: quedan {d} días", trialEnd: "El periodo de prueba ha terminado", more: "Necesito más tiempo", moreTip: "Prórroga de un mes con 50 piezas en el almacén", pay: "Pagar",
+          payTitle: "El periodo de prueba ha terminado", payText: "Sus datos se conservan. Para volver a añadir y sacar piezas, pague la suscripción.", payNote: "Prototipo: el pago real llegará con Supabase y Stripe.", close: "Cerrar", extended: "Periodo de prueba prorrogado un mes." }
+  };
+  function ST() { return SECT_T[lang] || SECT_T.ru; }
+  var staffMsg = "";
+
+  function renderStaffView(box) {
+    var t = ST(), A = window.SlabAuth;
+    var h = document.createElement("h2"); h.className = "view-title"; h.textContent = t.staffTitle; box.appendChild(h);
+    var list = A.staff();
+    var tbl = document.createElement("div"); tbl.className = "tbl";
+    var cols = [t.name, t.email, t.section, t.position, t.shift];
+    var head = document.createElement("div"); head.className = "tbl-row head";
+    head.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr)) auto";
+    cols.concat([""]).forEach(function (c) { var d = document.createElement("div"); d.textContent = c; head.appendChild(d); });
+    tbl.appendChild(head);
+    list.forEach(function (p) {
+      var r = document.createElement("div"); r.className = "tbl-row"; r.style.gridTemplateColumns = head.style.gridTemplateColumns;
+      [p.name, p.email, t[p.section], p.position, p.shift].forEach(function (v) { var d = document.createElement("div"); d.textContent = v || "—"; r.appendChild(d); });
+      var del = document.createElement("button"); del.type = "button"; del.className = "btn sm"; del.textContent = t.del;
+      del.setAttribute("data-del", p.email);
+      del.addEventListener("click", function () { A.removeStaff(p.email); staffMsg = ""; renderView(4); });
+      r.appendChild(del); tbl.appendChild(r);
+    });
+    box.appendChild(tbl);
+    if (!list.length) { var e = document.createElement("p"); e.className = "mnote"; e.textContent = t.empty; box.appendChild(e); }
+    var f = document.createElement("form"); f.id = "staffForm"; f.className = "staffform"; f.autocomplete = "off";
+    function fld(id, label, el) {
+      var l = document.createElement("label"); var sp = document.createElement("span"); sp.textContent = label; l.appendChild(sp);
+      el.id = id; l.appendChild(el); f.appendChild(l); return el;
+    }
+    function inp(type) { var x = document.createElement("input"); x.type = type; return x; }
+    fld("sfName", t.name, inp("text"));
+    fld("sfEmail", t.email, inp("email"));
+    var sel = document.createElement("select");
+    [["shop", t.shop], ["office", t.office]].forEach(function (o) { sel.add(new Option(o[1], o[0])); });
+    fld("sfSection", t.section, sel);
+    fld("sfPosition", t.position, inp("text"));
+    fld("sfShift", t.shift, inp("text"));
+    var pw = fld("sfPw", t.tempPw, inp("text")); pw.autocomplete = "off";
+    var add = document.createElement("button"); add.type = "submit"; add.className = "btn gold"; add.id = "sfAdd"; add.textContent = t.addBtn; f.appendChild(add);
+    var msg = document.createElement("p"); msg.className = "mnote"; msg.id = "sfMsg"; msg.textContent = staffMsg; f.appendChild(msg);
+    f.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var v = function (id) { return document.getElementById(id).value; };
+      if (!v("sfName").trim()) { msg.textContent = t.eName; return; }
+      add.disabled = true;
+      A.addStaff({ name: v("sfName"), email: v("sfEmail"), section: v("sfSection"), position: v("sfPosition"), shift: v("sfShift"), tempPw: v("sfPw") }).then(function () {
+        staffMsg = t.added.replace("{n}", v("sfName").trim()); renderView(4);
+      }, function (err) {
+        add.disabled = false;
+        msg.textContent = err.message === "exists" ? t.eExists : err.message === "short" ? t.eShort : t.eEmail;
+      });
+    });
+    box.appendChild(f);
+    var note = document.createElement("p"); note.className = "sample"; note.textContent = t.proto; box.appendChild(note);
+  }
+
+  // Пробный период: 30 дней с первого входа, +30 один раз, если на складе 50+ кусков (только показ)
+  var TRIAL_START = "granite.trialStart", TRIAL_EXT = "granite.trialExt", DAY = 86400000;
+  function trialDaysLeft() {
+    var st = 0; try { st = parseInt(localStorage.getItem(TRIAL_START), 10) || 0; } catch (e) {}
+    if (!st) { st = Date.now(); try { localStorage.setItem(TRIAL_START, String(st)); } catch (e) {} }
+    var ext = false; try { ext = localStorage.getItem(TRIAL_EXT) === "1"; } catch (e) {}
+    return Math.max(0, Math.ceil((st + (ext ? 60 : 30) * DAY - Date.now()) / DAY));
+  }
+  function renderTrial() {
+    var bar = document.getElementById("trialBar");
+    if (SECTION === "shop") { bar.hidden = true; return; }
+    var t = ST(), d = trialDaysLeft(), ext = false;
+    try { ext = localStorage.getItem(TRIAL_EXT) === "1"; } catch (e) {}
+    bar.hidden = false;
+    document.getElementById("trialTxt").textContent = d > 0 ? t.trial.replace("{d}", d) : t.trialEnd;
+    var more = document.getElementById("trialMore");
+    more.textContent = t.more; more.title = t.moreTip;
+    more.disabled = ext || ITEMS.length < 50;
+    more.hidden = ext;
+    document.getElementById("trialPay").textContent = t.pay;
+    document.documentElement.classList.toggle("trial-over", d <= 0);
+    document.getElementById("payTitle").textContent = t.payTitle;
+    document.getElementById("payText").textContent = t.payText;
+    document.getElementById("payBtn").textContent = t.pay;
+    document.getElementById("payClose").textContent = t.close;
+  }
+  document.getElementById("trialMore").addEventListener("click", function () {
+    try { localStorage.setItem(TRIAL_EXT, "1"); } catch (e) {}
+    renderTrial();
+    document.getElementById("trialTxt").textContent += " · " + ST().extended;
+  });
+  document.getElementById("trialPay").addEventListener("click", function () {
+    document.getElementById("payNote").textContent = ""; document.getElementById("payScreen").hidden = false;
+  });
+  document.getElementById("payBtn").addEventListener("click", function () { document.getElementById("payNote").textContent = ST().payNote; });
+  document.getElementById("payClose").addEventListener("click", function () { document.getElementById("payScreen").hidden = true; });
+
+  function sectionLabels() {
+    var t = ST(), ses = window.SlabAuth.session() || {};
+    document.getElementById("who").textContent = (ses.name ? ses.name + " · " : "") + t[SECTION];
+    document.getElementById("shopScan").textContent = t.scan;
+    document.getElementById("shopAdd").textContent = t.add;
+    document.getElementById("shopMeasure").textContent = t.measure;
+    document.getElementById("shopWork").textContent = t.work;
+    renderTrial();
+  }
+  document.getElementById("shopScan").addEventListener("click", function () { startLiveScan(); });
+  document.getElementById("shopAdd").addEventListener("click", function () { document.getElementById("add").click(); });
+  document.getElementById("shopMeasure").addEventListener("click", function () {
+    document.getElementById("add").click();
+    document.getElementById("iMeasure").click();
+  });
+  document.getElementById("logoutBtn").addEventListener("click", function () { window.SlabAuth.logout(); });
+  if (SECTION === "admin") { setAdminLook(true); }
   renderStatic();
   renderGrid();
+  if (SECTION === "admin") setTab(4);
 })();
 </script>
 <script src="measure-core.js"></script>

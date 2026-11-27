@@ -5,6 +5,13 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
+<script src="auth.js"></script>
+<script>
+// Отметка работы — только для цеха (и админа). Вход теперь на главной.
+(function () {
+  if (!window.SlabAuth || !window.SlabAuth.can("shop")) { document.documentElement.style.display = "none"; location.replace("index.html"); }
+})();
+</script>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -222,6 +229,8 @@ main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-dire
 
   document.getElementById("loginForm").addEventListener("submit", function (e) {
     e.preventDefault();
+    // Старый вход с самостоятельным паролем отключён: вход по разделам — на главной (временный пароль от админа)
+    window.location.href = "index.html"; return;
     var T = DICT[lang];
     var err = document.getElementById("loginErr");
     var email = document.getElementById("email").value.trim().toLowerCase();
@@ -264,7 +273,7 @@ main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-dire
   });
 
   document.getElementById("backBtn").addEventListener("click", function () {
-    if (me) showLogin(); else window.location.href = "index.html";
+    window.location.href = "app.html?s=shop";
   });
 
   var photo = document.getElementById("photo");
@@ -302,10 +311,11 @@ main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-dire
   });
 
   // Если сотрудник уже вошёл в этой вкладке, восстанавливаем его
-  var saved = null;
-  try { saved = sessionStorage.getItem("granite.worker"); } catch (e) {}
-  var restored = saved ? findStaff(saved) : null;
-  if (restored) { me = restored; showWork(); } else { renderLang(); }
+  var ses = window.SlabAuth && window.SlabAuth.session();
+  var restored = ses && ses.email ? findStaff(ses.email) : null;
+  if (restored) { me = restored; showWork(); }
+  else if (ses && ses.admin) { me = { name: "Админ", role: "", email: "" }; showWork(); }
+  else { window.location.href = "index.html"; }
 })();
 </script>
 </body>

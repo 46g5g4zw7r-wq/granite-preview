@@ -22,10 +22,13 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
   var p = await b.newPage({ viewport: { width: 1200, height: 900 } });
   var errs = []; p.on("pageerror", function (e) { errs.push(e.message); });
   p.on("console", function (m) { if (m.type() === "error" && !/net::ERR_|Failed to load resource/.test(m.text())) errs.push(m.text()); });
-  await p.goto("http://localhost:8766/app.html");
+  // Вход: сессия админа (может открыть цех), затем раздел цеха — там кнопка «Сфотографировать и измерить»
+  await p.goto("http://localhost:8766/print.html");
+  await p.evaluate(function () { sessionStorage.setItem("granite.session", JSON.stringify({ section: "admin", admin: true, email: "", name: "" })); });
+  await p.goto("http://localhost:8766/app.html?s=shop");
   await p.waitForTimeout(500);
   await p.click('.lang button[data-lang="en"]');
-  await p.click("#add");
+  await p.click("#shopAdd");
 
   async function measure(file) {
     await p.evaluate(function () { document.getElementById("iMeasureFile").value = ""; });
@@ -96,7 +99,7 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
   });
 
   await step("no marker -> message and retake button", async function () {
-    await p.click("#add");
+    await p.click("#shopAdd");
     await measure("/tmp/scene_nomarker.jpg");
     await p.waitForFunction(function () { var e = document.getElementById("msrMsg"); return e && /marker/i.test(e.textContent); }, null, { timeout: 60000 });
     assert.ok(await p.isVisible("#msrRetake"));
@@ -104,7 +107,7 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
   });
 
   await step("EXIF-rotated phone photo is measured upright", async function () {
-    await p.click("#add");
+    await p.click("#shopAdd");
     await measure("/tmp/scene_exif.jpg");
     await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3; }, null, { timeout: 60000 });
     var d = dims(await p.textContent("#msrDim")); near(d[0], 59.1, 0.7, "W"); near(d[1], 35.4, 0.7, "H");
@@ -113,7 +116,7 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
 
   await step("open three times in a row without console errors", async function () {
     for (var i = 0; i < 3; i++) {
-      await p.click("#add"); await measure("/tmp/scene.jpg");
+      await p.click("#shopAdd"); await measure("/tmp/scene.jpg");
       await p.waitForFunction(function () { return window.SlabMeasure._state().points.length >= 3; }, null, { timeout: 60000 });
       await p.click("#msrCancel");
     }
