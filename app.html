@@ -84,6 +84,7 @@ main{padding:20px 18px 40px;max-width:1280px;margin:0 auto;display:flex;flex-dir
 .found p{margin:0;flex:1;font-weight:600;color:var(--granite-800);min-width:180px}
 .measure{background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:10px;max-width:460px}
 .measure[hidden]{display:none}
+html.is-admin #scan,html.is-admin #camBtn,html.is-admin #galBtn,html.is-admin #measureBtn,html.is-admin #printBtn,html.is-admin #labelsBtn,html.is-admin #add,html.is-admin #itemForm,html.is-admin #liveScan,html.is-admin #found{display:none!important}
 .measure.itemwrap{max-width:1100px;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:22px;align-items:start}
 .itemwrap .iform{display:grid;gap:10px}
 .ihelp{background:rgba(179,141,79,.08);border:1px solid rgba(179,141,79,.35);border-radius:14px;padding:16px 18px;font-size:.92rem;line-height:1.5;position:sticky;top:120px}
@@ -1340,11 +1341,16 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     gate.hidden = false;
     gPw.focus();
   }
+  // Администратор: только работники, их должности и просмотр базы; инструменты склада скрыты
+  function setAdminLook(on) {
+    document.documentElement.classList.toggle("is-admin", on);
+    if (on) { itemForm.hidden = true; }
+  }
   function finishLogin() {
     admin = true;
     gate.hidden = true;
-    renderStatic();
-    if (currentTab) renderView(currentTab);
+    setAdminLook(true);
+    setTab(4);
   }
   document.getElementById("formSeg").addEventListener("click", function (e) {
     var b = e.target.closest("button");
@@ -1356,6 +1362,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   document.getElementById("role").addEventListener("click", function () {
     if (admin) {
       admin = false;
+      setAdminLook(false);
       renderStatic();
       if (currentTab) renderView(currentTab);
       return;
