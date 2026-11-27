@@ -82,6 +82,17 @@ main{padding:20px 18px 40px;max-width:1280px;margin:0 auto;display:flex;flex-dir
 .found p{margin:0;flex:1;font-weight:600;color:var(--granite-800);min-width:180px}
 .measure{background:var(--quartz-50);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:10px;max-width:460px}
 .measure[hidden]{display:none}
+.measure.itemwrap{max-width:1100px;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:22px;align-items:start}
+.itemwrap .iform{display:grid;gap:10px}
+.ihelp{background:rgba(179,141,79,.08);border:1px solid rgba(179,141,79,.35);border-radius:14px;padding:16px 18px;font-size:.92rem;line-height:1.5;position:sticky;top:120px}
+.ihelp h4{margin:0 0 8px;font-size:1.02rem}
+.ihelp h5{margin:14px 0 4px;font-size:.92rem;color:var(--gold-deep,#8a6a2e)}
+.ihelp ol,.ihelp ul{margin:0;padding-left:20px;display:grid;gap:5px}
+.ihelp b{font-weight:700}
+.ihelp .tip{margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.04);font-size:.86rem}
+html[data-theme="dark"] .ihelp{background:rgba(217,178,118,.08)}
+html[data-theme="dark"] .ihelp .tip{background:rgba(255,255,255,.05)}
+@media (max-width:860px){ .measure.itemwrap{grid-template-columns:1fr} .ihelp{position:static} }
 .measure h3{font-size:1.1rem}
 .measure label{display:grid;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink-soft)}
 .measure input{font:inherit;font-size:1rem;padding:10px 12px;border:1px solid #cfc8bb;border-radius:10px;background:#fff}
@@ -232,7 +243,8 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       <button type="button" class="btn gold" id="gOk"></button>
     </div>
   </section>
-  <section class="measure" id="itemForm" hidden>
+  <section class="measure itemwrap" id="itemForm" hidden>
+   <div class="iform">
     <h3 id="iTitle"></h3>
     <p class="mnote" id="iNote"></p>
     <label><span id="iCodeL"></span><input id="iCode" type="text" autocomplete="off"></label>
@@ -251,6 +263,8 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       <button type="button" class="btn" id="iCancel"></button>
       <button type="button" class="btn gold" id="iOk"></button>
     </div>
+   </div>
+   <aside class="ihelp" id="iHelp" aria-live="polite"></aside>
   </section>
   <section class="measure" id="pickForm" hidden>
     <h3 id="pkTitle"></h3>
@@ -1419,6 +1433,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     document.getElementById("iScan").textContent = document.getElementById("measureBtn").textContent;
     document.getElementById("iPhBtn").textContent = PH_T[lang] ? PH_T[lang].pick : PH_T.ru.pick;
     if (!(iPh.files && iPh.files[0])) document.getElementById("iPhName").textContent = PH_T[lang] ? PH_T[lang].none : PH_T.ru.none;
+    renderItemHelp();
   }
   var PH_T = {
     ru: { pick: "Выбрать фото", none: "Фото не выбрано" },
@@ -1426,6 +1441,42 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     en: { pick: "Choose photo", none: "No photo chosen" },
     es: { pick: "Elegir foto", none: "Sin foto" }
   };
+
+  var HELP_T = {
+    ru: { t: "Как добавить кусок", s: [
+      ["Быстрее всего — через QR-код", ["Нажми <b>«Сканировать QR-код»</b> и наведи камеру на этикетку.", "Код, название, размеры и ячейка заполнятся сами. Целые слэбы заводятся только так: размер уже записан в QR-коде."]],
+      ["Если заполняешь вручную", ["<b>Код с этикетки</b> — номер с наклейки, например S-077.", "<b>Название</b> — название камня, например Calacatta Gold.", "<b>Материал</b> — гранит, кварц, Dekton, мрамор или кварцит.", "<b>Ячейка</b> — место на складе, например A-01.", "<b>Ширина и высота</b> — в дюймах, можно с десятыми: 62.5. Ширина — длинная сторона.", "<b>Тип</b> — целая плита или остаток."]],
+      ["Фото", ["<b>«Выбрать фото»</b> — сними кусок целиком, при хорошем свете. По фото потом легче найти кусок.", "<b>«Найти похожие»</b> — после фото покажет похожие куски, которые уже есть на складе: так не заведёшь один кусок дважды."]],
+      ["Сохранение", ["Проверь размеры и нажми <b>«Сохранить»</b>. Кусок появится во вкладке «Остатки» и в каталоге.", "<b>«Отмена»</b> закрывает форму без сохранения."]]],
+      tip: "Скоро: кнопка «Сфотографировать и измерить» — повесь маркер на остаток, сфотографируй, и размеры впишутся сами." },
+    fr: { t: "Comment ajouter une pièce", s: [
+      ["Le plus rapide : par le code QR", ["Appuyez sur <b>« Scanner le QR »</b> et visez l’étiquette.", "Le code, le nom, les dimensions et l’emplacement se remplissent tout seuls. Les plaques entières s’ajoutent seulement ainsi : leurs dimensions sont déjà dans le QR."]],
+      ["Saisie manuelle", ["<b>Code de l’étiquette</b> — le numéro de l’autocollant, par ex. S-077.", "<b>Nom</b> — le nom de la pierre, par ex. Calacatta Gold.", "<b>Matériau</b> — granit, quartz, Dekton, marbre ou quartzite.", "<b>Emplacement</b> — la place dans l’entrepôt, par ex. A-01.", "<b>Largeur et hauteur</b> — en pouces, décimales permises : 62.5. La largeur est le grand côté.", "<b>Type</b> — plaque entière ou chute."]],
+      ["Photo", ["<b>« Choisir une photo »</b> — photographiez toute la pièce, avec une bonne lumière. La photo aide à la retrouver.", "<b>« Chercher similaires »</b> — après la photo, montre les pièces semblables déjà en stock, pour ne pas ajouter la même pièce deux fois."]],
+      ["Enregistrer", ["Vérifiez les dimensions et appuyez sur <b>« Enregistrer »</b>. La pièce apparaît dans « Stock » et dans le catalogue.", "<b>« Annuler »</b> ferme le formulaire sans enregistrer."]]],
+      tip: "Bientôt : le bouton « Photographier et mesurer » — accrochez le marqueur sur la chute, prenez la photo, les dimensions se remplissent seules." },
+    en: { t: "How to add a piece", s: [
+      ["Fastest: scan the QR code", ["Tap <b>“Scan QR code”</b> and point the camera at the label.", "Code, name, size and cell fill in by themselves. Whole slabs are added only this way: their size is already in the QR code."]],
+      ["Filling in by hand", ["<b>Label code</b> — the number on the sticker, e.g. S-077.", "<b>Name</b> — the stone name, e.g. Calacatta Gold.", "<b>Material</b> — granite, quartz, Dekton, marble or quartzite.", "<b>Cell</b> — the place in the warehouse, e.g. A-01.", "<b>Width and height</b> — in inches, decimals allowed: 62.5. Width is the long side.", "<b>Type</b> — whole slab or remnant."]],
+      ["Photo", ["<b>“Choose photo”</b> — shoot the whole piece in good light. The photo makes the piece easier to find later.", "<b>“Find similar”</b> — after the photo, shows similar pieces already in stock, so you don’t add the same piece twice."]],
+      ["Saving", ["Check the sizes and tap <b>“Save”</b>. The piece appears under “Stock” and in the catalog.", "<b>“Cancel”</b> closes the form without saving."]]],
+      tip: "Coming soon: a “Take photo and measure” button — hang the marker on the remnant, take the photo, and the sizes fill in by themselves." },
+    es: { t: "Cómo añadir una pieza", s: [
+      ["Lo más rápido: escanear el código QR", ["Pulse <b>«Escanear QR»</b> y apunte la cámara a la etiqueta.", "El código, el nombre, las medidas y la celda se rellenan solos. Las placas enteras se añaden solo así: sus medidas ya están en el QR."]],
+      ["Rellenar a mano", ["<b>Código de la etiqueta</b> — el número de la pegatina, p. ej. S-077.", "<b>Nombre</b> — el nombre de la piedra, p. ej. Calacatta Gold.", "<b>Material</b> — granito, cuarzo, Dekton, mármol o cuarcita.", "<b>Celda</b> — el lugar en el almacén, p. ej. A-01.", "<b>Ancho y alto</b> — en pulgadas, con decimales: 62.5. El ancho es el lado largo.", "<b>Tipo</b> — placa entera o resto."]],
+      ["Foto", ["<b>«Elegir foto»</b> — fotografíe la pieza entera con buena luz. La foto ayuda a encontrarla después.", "<b>«Buscar similares»</b> — después de la foto, muestra piezas parecidas que ya están en el almacén, para no añadir la misma pieza dos veces."]],
+      ["Guardar", ["Revise las medidas y pulse <b>«Guardar»</b>. La pieza aparece en «Existencias» y en el catálogo.", "<b>«Cancelar»</b> cierra el formulario sin guardar."]]],
+      tip: "Próximamente: el botón «Fotografiar y medir» — cuelgue el marcador en el resto, haga la foto y las medidas se rellenan solas." }
+  };
+  function renderItemHelp() {
+    var H = HELP_T[lang] || HELP_T.ru;
+    var html = "<h4>" + H.t + "</h4>";
+    H.s.forEach(function (sec) {
+      html += "<h5>" + sec[0] + "</h5><ul>" + sec[1].map(function (li) { return "<li>" + li + "</li>"; }).join("") + "</ul>";
+    });
+    html += '<p class="tip">' + H.tip + "</p>";
+    document.getElementById("iHelp").innerHTML = html;
+  }
   window.__itemFormLabels = function () { itemFormLabels(); };
   function openItemForm() {
     iKind.innerHTML = ""; iForm.innerHTML = "";
