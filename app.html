@@ -240,6 +240,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     <label><span id="iFormL"></span><select id="iForm"></select></label>
     <label><span id="iPhL"></span><input id="iPh" type="file" accept="image/*" capture="environment"></label>
     <button type="button" class="btn" id="iFind"></button>
+    <button type="button" class="btn" id="iScan"></button>
     <div class="cands" id="iCands"></div>
     <p class="merr" id="iErr" role="alert"></p>
     <div class="mbtns">
@@ -1398,6 +1399,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     iErr.textContent = ""; pendingImg = ""; autoMode = false;
     document.getElementById("iCands").innerHTML = "";
     document.getElementById("iFind").textContent = L.find;
+    document.getElementById("iScan").textContent = document.getElementById("measureBtn").textContent;
     itemForm.hidden = false;
     setTimeout(function () { iName.focus(); }, 40);
   }
@@ -1463,6 +1465,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       }
     }).catch(function () { if (manual) iErr.textContent = L.none; });
   }
+  document.getElementById("iScan").addEventListener("click", function () { startLiveScan(); });
   document.getElementById("iFind").addEventListener("click", function () {
     var L = ITEM_T[lang] || ITEM_T.ru;
     if (!pendingImg) { iErr.textContent = L.needPhoto; return; }
