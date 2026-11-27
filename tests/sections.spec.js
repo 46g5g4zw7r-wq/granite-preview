@@ -22,7 +22,18 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
   async function signIn(btn, email, pw) {
     await p.click(btn); await p.waitForSelector("#login.open");
     if (email !== null) await p.fill("#email", email);
-    await p.fill("#pw", pw); await p.click("#submitBtn");
+    await p.fill("#pw", pw);
+    assert.strictEqual(await p.inputValue("#pw"), pw, "password not typed");
+    await p.click("#submitBtn");
+    await settle();
+  }
+  // Ждём конца проверки пароля (PBKDF2 занимает до нескольких секунд): ушли со страницы, или кнопка снова активна
+  async function settle() {
+    await p.waitForFunction(function () {
+      if (!/index\.html/.test(location.href)) return true;
+      var b = document.getElementById("submitBtn"); return b && !b.disabled;
+    }, null, { timeout: 30000 }).catch(function () {});
+    await p.waitForTimeout(200);
   }
 
   await step("home has Office / Admin / Shop floor buttons in 4 languages, no 'view without signing in'", async function () {
@@ -49,11 +60,11 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
       await p.waitForSelector("#staffForm", { timeout: 5000 });
       await p.fill("#sfName", "Иван"); await p.fill("#sfEmail", "ivan@x.ca");
       await p.selectOption("#sfSection", "shop"); await p.fill("#sfPosition", "Пильщик"); await p.fill("#sfPw", "temp12345");
-      await p.click("#sfAdd"); await p.waitForTimeout(2500);
+      await p.click("#sfAdd"); await p.waitForFunction(function () { return /Иван/.test((document.getElementById("sfMsg") || {}).textContent || ""); }, null, { timeout: 30000 });
       assert.ok((await p.textContent("#view")).indexOf("ivan@x.ca") >= 0, "worker not listed");
       await p.fill("#sfName", "Оля"); await p.fill("#sfEmail", "olya@x.ca");
       await p.selectOption("#sfSection", "office"); await p.fill("#sfPw", "temp12345");
-      await p.click("#sfAdd"); await p.waitForTimeout(2500);
+      await p.click("#sfAdd"); await p.waitForFunction(function () { return /Оля/.test((document.getElementById("sfMsg") || {}).textContent || ""); }, null, { timeout: 30000 });
       await p.click("#logoutBtn"); await p.waitForURL(/index\.html/);
     });
   }
@@ -64,7 +75,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
       await p.evaluate(function () { return window.SlabAuth.addStaff({ name: "Иван", email: "ivan@x.ca", section: "shop", tempPw: "temp12345" }); });
     }
     await home("ru");
-    await signIn("#goOffice", "ivan@x.ca", "temp12345"); await p.waitForTimeout(2500);
+    await signIn("#goOffice", "ivan@x.ca", "temp12345");
     assert.ok(/Цех/.test(await p.textContent("#err")), "message: " + await p.textContent("#err"));
     assert.ok(/index\.html/.test(p.url()), "left the home page");
     assert.strictEqual(await p.evaluate(function () { return window.SlabAuth.session(); }), null);
@@ -72,7 +83,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
 
   await step("temporary password forces a change; then the worker lands in the shop floor", async function () {
     await home("ru");
-    await signIn("#goShop", "ivan@x.ca", "temp12345"); await p.waitForTimeout(2500);
+    await signIn("#goShop", "ivan@x.ca", "temp12345");
     assert.ok(await p.isVisible("#newPw"), "no change-password step");
     await p.fill("#newPw", "mypass999"); await p.fill("#newPw2", "mypass999"); await p.click("#submitBtn");
     await p.waitForURL(/app\.html\?s=shop/, { timeout: 15000 });
@@ -102,7 +113,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
 
     await step("office sees stock and catalog, no scanner / camera / add / staff", async function () {
       await p.evaluate(function () { window.SlabAuth.logout(); });
-      await home("ru"); await signIn("#goOffice", "olya@x.ca", "temp12345"); await p.waitForTimeout(2500);
+      await home("ru"); await signIn("#goOffice", "olya@x.ca", "temp12345");
       await p.fill("#newPw", "olyapass1"); await p.fill("#newPw2", "olyapass1"); await p.click("#submitBtn");
       await p.waitForURL(/app\.html\?s=office/, { timeout: 15000 }); await p.waitForTimeout(400);
       for (var id of ["#scan", "#camBtn", "#galBtn", "#measureBtn", "#add"]) assert.ok(!(await p.isVisible(id)), id + " visible in office");
@@ -120,7 +131,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
       await p.waitForURL(/app\.html\?s=admin/, { timeout: 15000 }); await p.waitForTimeout(400);
       await p.click('#view [data-del="ivan@x.ca"]'); await p.waitForTimeout(300);
       await p.click("#logoutBtn"); await p.waitForURL(/index\.html/);
-      await signIn("#goShop", "ivan@x.ca", "mypass999"); await p.waitForTimeout(2500);
+      await signIn("#goShop", "ivan@x.ca", "mypass999");
       assert.ok(/index\.html/.test(p.url()), "removed worker signed in");
     });
 
