@@ -15,7 +15,7 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
 .scene{position:fixed;inset:0;overflow:hidden}
 
 /* Фоновые фото: медленно сменяют друг друга */
-.slide{position:absolute;inset:-4%;background-size:cover;background-position:center;opacity:0;transform:scale(1.02);animation:cycle 40s linear infinite;will-change:opacity,transform}
+.slide{position:absolute;inset:-4%;background-size:cover;background-position:center;opacity:0;transform:scale(1.02);animation:cycle 135s linear infinite;will-change:opacity,transform}
 .slide.b1{background-image:url(img/s1.jpg);animation-delay:0s}
 .slide.b2{background-image:url(img/s2.jpg);animation-delay:-5s}
 .slide.b3{background-image:url(img/s3.jpg);animation-delay:-10s}
@@ -24,11 +24,30 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
 .slide.b6{background-image:url(img/s6.jpg);animation-delay:-25s}
 .slide.b7{background-image:url(img/s7.jpg);animation-delay:-30s}
 .slide.b8{background-image:url(img/s8.jpg);animation-delay:-35s}
+.slide.b9{background-image:url(img/s9.jpg);animation-delay:-40s}
+.slide.b10{background-image:url(img/s10.jpg);animation-delay:-45s}
+.slide.b11{background-image:url(img/s11.jpg);animation-delay:-50s}
+.slide.b12{background-image:url(img/s12.jpg);animation-delay:-55s}
+.slide.b13{background-image:url(img/s13.jpg);animation-delay:-60s}
+.slide.b14{background-image:url(img/s14.jpg);animation-delay:-65s}
+.slide.b15{background-image:url(img/s15.jpg);animation-delay:-70s}
+.slide.b16{background-image:url(img/s16.jpg);animation-delay:-75s}
+.slide.b17{background-image:url(img/s17.jpg);animation-delay:-80s}
+.slide.b18{background-image:url(img/s18.jpg);animation-delay:-85s}
+.slide.b19{background-image:url(img/s19.jpg);animation-delay:-90s}
+.slide.b20{background-image:url(img/s20.jpg);animation-delay:-95s}
+.slide.b21{background-image:url(img/s21.jpg);animation-delay:-100s}
+.slide.b22{background-image:url(img/s22.jpg);animation-delay:-105s}
+.slide.b23{background-image:url(img/s23.jpg);animation-delay:-110s}
+.slide.b24{background-image:url(img/s24.jpg);animation-delay:-115s}
+.slide.b25{background-image:url(img/s25.jpg);animation-delay:-120s}
+.slide.b26{background-image:url(img/s26.jpg);animation-delay:-125s}
+.slide.b27{background-image:url(img/s27.jpg);animation-delay:-130s}
 @keyframes cycle{
   0%{opacity:0;transform:scale(1.02)}
-  4%{opacity:1}
-  16%{opacity:1}
-  21%,100%{opacity:0;transform:scale(1.12)}
+  1.19%{opacity:1}
+  4.74%{opacity:1}
+  6.22%,100%{opacity:0;transform:scale(1.12)}
 }
 
 /* Переливание: тёплая вуаль, которая плывёт */
@@ -161,8 +180,7 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
 </head>
 <body>
 <main class="scene" aria-label="Заставка Slabwise">
-  <div class="slide b1"></div><div class="slide b2"></div><div class="slide b3"></div><div class="slide b4"></div>
-  <div class="slide b5"></div><div class="slide b6"></div><div class="slide b7"></div><div class="slide b8"></div>
+  <div class="slide b1"></div><div class="slide b2"></div><div class="slide b3"></div><div class="slide b4"></div><div class="slide b5"></div><div class="slide b6"></div><div class="slide b7"></div><div class="slide b8"></div><div class="slide b9"></div><div class="slide b10"></div><div class="slide b11"></div><div class="slide b12"></div><div class="slide b13"></div><div class="slide b14"></div><div class="slide b15"></div><div class="slide b16"></div><div class="slide b17"></div><div class="slide b18"></div><div class="slide b19"></div><div class="slide b20"></div><div class="slide b21"></div><div class="slide b22"></div><div class="slide b23"></div><div class="slide b24"></div><div class="slide b25"></div><div class="slide b26"></div><div class="slide b27"></div>
   <div class="wash"></div>
   <div class="sheen"></div>
   <div class="shade"></div>
@@ -250,7 +268,7 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
 
 <script>
 (function () {
-  var PHOTOS = [1,2,3,4,5,6,7,8].map(function (n) { return "url(img/s" + n + ".jpg)"; });
+  var PHOTOS = Array.apply(null, Array(27)).map(function (_, i) { return i + 1; }).map(function (n) { return "url(img/s" + n + ".jpg)"; });
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var space = document.getElementById("space");
   var band = document.getElementById("band");
