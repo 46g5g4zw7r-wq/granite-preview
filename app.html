@@ -24,6 +24,9 @@ h1,h2,h3{font-family:Manrope,Inter,system-ui,sans-serif;font-weight:750;letter-s
 .right{display:flex;align-items:center;gap:10px}
 .lang{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:999px;padding:3px}
 .lang button{font:inherit;font-size:.78rem;font-weight:700;color:#d8d2c4;background:transparent;border:0;border-radius:999px;padding:6px 10px;cursor:pointer}
+.phpick{display:flex;align-items:center;gap:10px;position:relative}
+.phpick input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+#iPhName{font-size:.85rem;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lang button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-light),var(--gold));color:#fff}
 .logout{font:inherit;font-size:.85rem;color:#d8d2c4;text-decoration:none;padding:6px 10px;border-radius:10px}
 .logout:hover{background:rgba(255,255,255,.08);color:#fff}
@@ -239,7 +242,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     <label><span id="iWL"></span><input id="iW" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
     <label><span id="iHL"></span><input id="iH" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
     <label><span id="iFormL"></span><select id="iForm"></select></label>
-    <label><span id="iPhL"></span><input id="iPh" type="file" accept="image/*" capture="environment"></label>
+    <label><span id="iPhL"></span><span class="phpick"><span class="btn sm" id="iPhBtn"></span><span id="iPhName"></span><input id="iPh" type="file" accept="image/*" capture="environment"></span></label>
     <button type="button" class="btn" id="iFind"></button>
     <button type="button" class="btn" id="iScan"></button>
     <div class="cands" id="iCands"></div>
@@ -622,6 +625,8 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       lang = b.getAttribute("data-lang");
       try { localStorage.setItem("granite.lang", lang); } catch (e) {}
       renderStatic(); renderGrid(); if (currentTab) renderView(currentTab);
+      var f = document.getElementById("itemForm");
+      if (f && !f.hidden && typeof window.__itemFormLabels === "function") window.__itemFormLabels();
     });
   });
 
@@ -1378,13 +1383,13 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   var pendingImg = "";
   var autoMode = false;   // режим «штрих-код → фото слаба»: сохраняем сами
 
-  function openItemForm() {
+  function itemFormLabels() {
     var L = ITEM_T[lang] || ITEM_T.ru, K = DICT[lang].kind;
+    var kv = iKind.value, fv = iForm.value;
     document.getElementById("iTitle").textContent = L.title;
     document.getElementById("iNote").textContent = L.note;
     document.getElementById("iNameL").textContent = L.name;
     document.getElementById("iCodeL").textContent = L.codeL;
-    document.getElementById("iCode").value = "";
     document.getElementById("iKindL").textContent = L.kind;
     document.getElementById("iCellL").textContent = L.cell;
     document.getElementById("iWL").textContent = L.w;
@@ -1397,11 +1402,27 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
     iForm.innerHTML = "";
     [["quartz", K.quartz], ["granite", K.granite]].forEach(function (o) { iKind.add(new Option(o[1], o[0])); });
     [["slab", L.slab], ["rest", L.rest]].forEach(function (o) { iForm.add(new Option(o[1], o[0])); });
+    if (kv) iKind.value = kv;
+    if (fv) iForm.value = fv;
+    document.getElementById("iFind").textContent = L.find;
+    document.getElementById("iScan").textContent = document.getElementById("measureBtn").textContent;
+    document.getElementById("iPhBtn").textContent = PH_T[lang] ? PH_T[lang].pick : PH_T.ru.pick;
+    if (!(iPh.files && iPh.files[0])) document.getElementById("iPhName").textContent = PH_T[lang] ? PH_T[lang].none : PH_T.ru.none;
+  }
+  var PH_T = {
+    ru: { pick: "Выбрать фото", none: "Фото не выбрано" },
+    fr: { pick: "Choisir une photo", none: "Aucune photo" },
+    en: { pick: "Choose photo", none: "No photo chosen" },
+    es: { pick: "Elegir foto", none: "Sin foto" }
+  };
+  window.__itemFormLabels = function () { itemFormLabels(); };
+  function openItemForm() {
+    iKind.innerHTML = ""; iForm.innerHTML = "";
+    document.getElementById("iCode").value = "";
     iName.value = ""; iCell.value = ""; iW.value = ""; iH.value = ""; iPh.value = "";
     iErr.textContent = ""; pendingImg = ""; autoMode = false;
     document.getElementById("iCands").innerHTML = "";
-    document.getElementById("iFind").textContent = L.find;
-    document.getElementById("iScan").textContent = document.getElementById("measureBtn").textContent;
+    itemFormLabels();
     itemForm.hidden = false;
     setTimeout(function () { iName.focus(); }, 40);
   }
@@ -1409,6 +1430,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   // Фото сжимаем до 480 px, чтобы уложиться в память браузера
   iPh.addEventListener("change", function () {
     var f = iPh.files && iPh.files[0];
+    document.getElementById("iPhName").textContent = f ? f.name : (PH_T[lang] || PH_T.ru).none;
     if (!f) { pendingImg = ""; return; }
     var rd = new FileReader();
     rd.onload = function () {
