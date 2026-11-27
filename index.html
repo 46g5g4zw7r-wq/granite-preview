@@ -134,8 +134,9 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
 .gold:hover{filter:brightness(1.08)}
 .shake{animation:shake .45s}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
-.support{display:block;margin:10px auto 0;font-size:.8rem;color:rgba(231,220,198,.75);text-decoration:none;letter-spacing:.03em;pointer-events:auto;position:relative;z-index:4}
-.support:hover,.support:focus-visible{color:#e9c98a;text-decoration:underline}
+.support{display:inline-flex;align-items:center;gap:8px;margin:16px auto 0;padding:9px 18px;border:1.5px solid #e2b866;border-radius:999px;background:rgba(20,16,10,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#f3dca8;font-size:.95rem;font-weight:600;text-decoration:none;letter-spacing:.02em;pointer-events:auto;position:relative;z-index:4;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.support::before{content:'\2709';font-size:1.05rem;line-height:1}
+.support:hover,.support:focus-visible{background:#e2b866;color:#1b1408;outline:none}
 .demo{margin:12px 0 0;font-size:.75rem;color:rgba(231,220,198,.6)}
 .login input.fld{font:inherit;font-size:1rem;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.28);border-radius:12px;padding:11px 12px;outline:none;width:100%;backdrop-filter:blur(6px)}
 .login input.fld:focus{border-color:var(--gold-light);box-shadow:0 0 0 3px rgba(179,141,79,.25)}
@@ -220,7 +221,7 @@ html,body{margin:0;height:100%;background:#15171a;color:var(--ink);overflow:hidd
     <div class="line"><i></i></div>
     <button type="button" class="enter" id="enterBtn">Войти</button>
     <button type="button" class="linkbtn" id="demoBtn" style="pointer-events:auto;font-size:.9rem"></button>
-    <a class="support" id="supportLink" href="mailto:support@slabwise.ca"><span id="supportLabel">Поддержка</span>: support@slabwise.ca</a>
+    <a class="support" id="supportLink" href="mailto:support@slabwise.ca"><span><span id="supportLabel">Поддержка</span>: support@slabwise.ca</span></a>
     <section class="login" id="login" role="dialog" aria-labelledby="loginTitle" aria-modal="false">
       <form id="loginForm" autocomplete="off">
         <h2 id="loginTitle">Вход</h2>
