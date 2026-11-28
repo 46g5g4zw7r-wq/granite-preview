@@ -2,7 +2,7 @@
 <html lang="ru" translate="no">
 <head>
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://diydirqvwvpmwatemgoe.supabase.co; media-src 'self' blob:; connect-src 'self' https://diydirqvwvpmwatemgoe.supabase.co wss://diydirqvwvpmwatemgoe.supabase.co; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
 
@@ -79,6 +79,8 @@
 </div>
 
 <script src="vendor/qrcode.min.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="cloud.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
@@ -97,14 +99,10 @@
   applyMode(modeSel.value);
   modeSel.addEventListener("change", function () { applyMode(modeSel.value); });
 
-  // Тот же счётчик, что в приложении (granite.seq), чтобы номера не повторялись
+  // Тот же общий счётчик на сервере, что в приложении, чтобы номера не повторялись
   function takeCodes(n) {
-    var start = 0;
-    try { start = parseInt(localStorage.getItem("granite.seq") || "0", 10) || 0; } catch (e) { start = 0; }
-    var codes = [];
-    for (var i = 1; i <= n; i++) codes.push("S-" + String(start + i).padStart(3, "0"));
-    try { localStorage.setItem("granite.seq", String(start + n)); } catch (e) { return null; }
-    return codes;
+    if (!window.SlabCloud || !window.SlabCloud.backend()) return Promise.reject(new Error("net"));
+    return window.SlabCloud.reserveCodes(n);
   }
 
   // Размер "126 × 36" или "126x36" -> "126x36"; в QR нельзя вводить разделитель "|"
@@ -147,10 +145,16 @@
     if (!n || n < 1 || n > 50) { err.textContent = "Введите число от 1 до 50."; return; }
     var name = $("name").value.trim(), size = $("size").value.trim(), cell = $("cell").value.trim();
     if (!name) { err.textContent = "Введите название камня: оно печатается на наклейке и попадает в QR."; return; }
-    var codes = takeCodes(n);
-    if (!codes) { err.textContent = "Не удалось сохранить счётчик номеров. Проверьте настройки браузера."; return; }
-    sheet.innerHTML = "";
-    codes.forEach(function (c) { sheet.appendChild(makeLabel(c, name, size, cell)); });
+    var btn = $("make"); btn.disabled = true;
+    takeCodes(n).then(function (codes) {
+      btn.disabled = false;
+      if (!codes || !codes.length) throw new Error("empty");
+      sheet.innerHTML = "";
+      codes.forEach(function (c) { sheet.appendChild(makeLabel(c, name, size, cell)); });
+    }).catch(function () {
+      btn.disabled = false;
+      err.textContent = "Не удалось получить номера с сервера. Войдите в Slabwise (Офис или Админ) в этом браузере и проверьте интернет.";
+    });
   });
 
   $("print").addEventListener("click", function () {

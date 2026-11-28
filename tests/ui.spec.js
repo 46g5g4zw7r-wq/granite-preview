@@ -19,7 +19,9 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
 (async function () {
   await new Promise(function (r) { setTimeout(r, 800); });
   var b = await chromium.launch();
-  var p = await b.newPage({ viewport: { width: 1200, height: 900 } });
+  var FAKE = require("./fake-init.js")({ as: "admin" });
+  var uctx = await b.newContext({ viewport: { width: 1200, height: 900 } }); await uctx.addInitScript({ content: FAKE });
+  var p = await uctx.newPage();
   var errs = []; p.on("pageerror", function (e) { errs.push(e.message); });
   p.on("console", function (m) { if (m.type() === "error" && !/net::ERR_|Failed to load resource/.test(m.text())) errs.push(m.text()); });
   // Вход: сессия админа (может открыть цех), затем раздел цеха — там кнопка «Сфотографировать и измерить»
@@ -150,7 +152,8 @@ function dims(text) { var m = /([\d.]+)\s*×\s*([\d.]+)/.exec(text || ""); retur
   });
 
   await step("browsers without createImageBitmap: photo still loads and the temporary URL is released", async function () {
-    var p2 = await b.newPage({ viewport: { width: 1200, height: 900 } });
+    var c2 = await b.newContext({ viewport: { width: 1200, height: 900 } }); await c2.addInitScript({ content: FAKE });
+    var p2 = await c2.newPage();
     await p2.addInitScript(function () {
       window.__revoked = 0; var r = URL.revokeObjectURL.bind(URL);
       URL.revokeObjectURL = function (u) { window.__revoked++; return r(u); };

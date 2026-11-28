@@ -2,9 +2,11 @@
 <html lang="ru" translate="no">
 <head>
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' data:; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://diydirqvwvpmwatemgoe.supabase.co; media-src 'self' blob:; connect-src 'self' data: https://diydirqvwvpmwatemgoe.supabase.co wss://diydirqvwvpmwatemgoe.supabase.co; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
+<script src="vendor/supabase.js"></script>
+<script src="cloud.js"></script>
 <script src="auth.js"></script>
 <script>
 // Раздел из адреса: app.html?s=office|shop|admin. Без входа в этот раздел — на главную.
@@ -1642,10 +1644,9 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
 
   // Код куска: S-001, S-002, ... Он же зашит в QR-код на карточке
   function nextCode() {
-    var n = 0;
-    try { n = (parseInt(localStorage.getItem("granite.seq") || "0", 10) || 0) + 1; localStorage.setItem("granite.seq", String(n)); }
-    catch (e) { n = Math.floor(Date.now() / 1000) % 100000; }
-    return "S-" + String(n).padStart(3, "0");
+    // Номер из общего счётчика на сервере; без связи — уникальный по времени
+    var c = window.SlabCloud && window.SlabCloud.takeCode();
+    return c || "S-T" + Date.now().toString(36).toUpperCase();
   }
 
   // Фото слаба в режиме штрих-кода: сохраняем кусок сразу, размеры и ячейку можно уточнить позже
@@ -1719,28 +1720,28 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
           staffTitle: "Сотрудники", name: "Имя", email: "E-mail", section: "Раздел", position: "Должность", shift: "Смена", tempPw: "Временный пароль (от 8 символов)",
           addBtn: "Добавить сотрудника", del: "Удалить", reset: "Сбросить пароль", resetLabel: "Новый временный пароль для {n} (от 8 символов)", resetMsg: "Новый временный пароль для {n} сохранён. Передайте его сотруднику: при входе он придумает свой.", resetOk: "Сохранить", empty: "Пока никого. Добавьте сотрудника: он войдёт по e-mail и временному паролю и сразу придумает свой.",
           eEmail: "Проверьте e-mail.", eExists: "Сотрудник с таким e-mail уже есть.", eShort: "Временный пароль — не меньше 8 символов.", eName: "Введите имя.", added: "Добавлен: {n}. Передайте ему e-mail и временный пароль.",
-          proto: "Прототип: сотрудники хранятся в этом браузере, войти они смогут только на этом устройстве (до Supabase).",
+          proto: "Сотрудники входят с любого телефона или компьютера: e-mail и временный пароль, при первом входе они задают свой.", eNet: "Нет связи с сервером. Попробуйте ещё раз.",
           trial: "Пробный период: осталось {d} дн.", trialEnd: "Пробный период закончился", more: "Нужно больше времени", moreTip: "Продление на месяц — после 50 кусков на складе", pay: "Оплатить",
           payTitle: "Пробный период закончился", payText: "Данные сохранены. Чтобы снова добавлять и списывать куски, оплатите подписку.", payNote: "Прототип: настоящая оплата появится вместе с Supabase и Stripe.", close: "Закрыть", extended: "Пробный период продлён на месяц." },
     fr: { office: "Bureau", shop: "Atelier", admin: "Admin", scan: "📷 Scanner le QR", add: "+ Ajouter une pièce", measure: "📐 Photographier et mesurer", work: "✅ Pointage du travail",
           staffTitle: "Employés", name: "Nom", email: "E-mail", section: "Section", position: "Poste", shift: "Équipe", tempPw: "Mot de passe temporaire (8 car. min.)",
           addBtn: "Ajouter l’employé", del: "Supprimer", reset: "Réinitialiser", resetLabel: "Nouveau mot de passe temporaire pour {n} (8 car. min.)", resetMsg: "Nouveau mot de passe temporaire pour {n} enregistré. Donnez-le à l’employé : il choisira le sien à la connexion.", resetOk: "Enregistrer", empty: "Personne pour l’instant. Ajoutez un employé : il se connecte avec son e-mail et le mot de passe temporaire, puis choisit le sien.",
           eEmail: "Vérifiez l’e-mail.", eExists: "Un employé avec cet e-mail existe déjà.", eShort: "Mot de passe temporaire : 8 caractères minimum.", eName: "Saisissez le nom.", added: "Ajouté : {n}. Donnez-lui l’e-mail et le mot de passe temporaire.",
-          proto: "Prototype : les employés sont enregistrés dans ce navigateur et ne peuvent se connecter que sur cet appareil (avant Supabase).",
+          proto: "Les employés se connectent depuis n’importe quel téléphone ou ordinateur : e-mail et mot de passe temporaire, puis le leur à la première connexion.", eNet: "Pas de connexion au serveur. Réessayez.",
           trial: "Période d’essai : encore {d} j.", trialEnd: "La période d’essai est terminée", more: "Besoin de plus de temps", moreTip: "Prolongation d’un mois après 50 pièces en stock", pay: "Payer",
           payTitle: "La période d’essai est terminée", payText: "Vos données sont conservées. Pour ajouter et sortir des pièces, payez l’abonnement.", payNote: "Prototype : le vrai paiement arrivera avec Supabase et Stripe.", close: "Fermer", extended: "Période d’essai prolongée d’un mois." },
     en: { office: "Office", shop: "Shop floor", admin: "Admin", scan: "📷 Scan QR", add: "+ Add piece", measure: "📐 Take photo and measure", work: "✅ Work check-in",
           staffTitle: "Staff", name: "Name", email: "E-mail", section: "Section", position: "Position", shift: "Shift", tempPw: "Temporary password (8+ characters)",
           addBtn: "Add employee", del: "Delete", reset: "Reset password", resetLabel: "New temporary password for {n} (8+ characters)", resetMsg: "New temporary password for {n} saved. Give it to the employee: they choose their own at sign-in.", resetOk: "Save", empty: "Nobody yet. Add an employee: they sign in with their e-mail and the temporary password, then choose their own.",
           eEmail: "Check the e-mail.", eExists: "An employee with this e-mail already exists.", eShort: "Temporary password: at least 8 characters.", eName: "Enter the name.", added: "Added: {n}. Give them the e-mail and temporary password.",
-          proto: "Prototype: staff are stored in this browser and can sign in only on this device (until Supabase).",
+          proto: "Staff sign in from any phone or computer: e-mail and temporary password, then they set their own on first sign-in.", eNet: "No connection to the server. Try again.",
           trial: "Free trial: {d} days left", trialEnd: "The free trial has ended", more: "Need more time", moreTip: "One-month extension after 50 pieces in stock", pay: "Pay",
           payTitle: "The free trial has ended", payText: "Your data is kept. To add and take out pieces again, pay for the subscription.", payNote: "Prototype: real payment comes with Supabase and Stripe.", close: "Close", extended: "Free trial extended by one month." },
     es: { office: "Oficina", shop: "Taller", admin: "Admin", scan: "📷 Escanear QR", add: "+ Añadir pieza", measure: "📐 Fotografiar y medir", work: "✅ Registro de trabajo",
           staffTitle: "Empleados", name: "Nombre", email: "E-mail", section: "Sección", position: "Puesto", shift: "Turno", tempPw: "Contraseña temporal (mín. 8 caracteres)",
           addBtn: "Añadir empleado", del: "Eliminar", reset: "Restablecer", resetLabel: "Contraseña temporal nueva para {n} (mín. 8 caracteres)", resetMsg: "Contraseña temporal nueva para {n} guardada. Désela al empleado: elegirá la suya al entrar.", resetOk: "Guardar", empty: "Todavía no hay nadie. Añada un empleado: entra con su e-mail y la contraseña temporal y luego elige la suya.",
           eEmail: "Revise el e-mail.", eExists: "Ya existe un empleado con este e-mail.", eShort: "Contraseña temporal: mínimo 8 caracteres.", eName: "Introduzca el nombre.", added: "Añadido: {n}. Dele el e-mail y la contraseña temporal.",
-          proto: "Prototipo: los empleados se guardan en este navegador y solo pueden entrar en este dispositivo (hasta Supabase).",
+          proto: "Los empleados entran desde cualquier teléfono u ordenador: e-mail y contraseña temporal, y en el primer acceso eligen la suya.", eNet: "Sin conexión con el servidor. Inténtelo de nuevo.",
           trial: "Periodo de prueba: quedan {d} días", trialEnd: "El periodo de prueba ha terminado", more: "Necesito más tiempo", moreTip: "Prórroga de un mes con 50 piezas en el almacén", pay: "Pagar",
           payTitle: "El periodo de prueba ha terminado", payText: "Sus datos se conservan. Para volver a añadir y sacar piezas, pague la suscripción.", payNote: "Prototipo: el pago real llegará con Supabase y Stripe.", close: "Cerrar", extended: "Periodo de prueba prorrogado un mes." }
   };
@@ -1763,7 +1764,11 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
       [p.name, p.email, t[p.section], p.position, p.shift].forEach(function (v) { var d = document.createElement("div"); d.textContent = v || "—"; r.appendChild(d); });
       var del = document.createElement("button"); del.type = "button"; del.className = "btn sm"; del.textContent = t.del;
       del.setAttribute("data-del", p.email);
-      del.addEventListener("click", function () { A.removeStaff(p.email); staffMsg = null; resetFor = null; renderView(4); });
+      del.addEventListener("click", function () {
+        del.disabled = true;
+        A.removeStaff(p.email).then(function () { staffMsg = null; resetFor = null; renderView(4); },
+          function () { del.disabled = false; staffMsg = { key: "eNet", n: "" }; renderView(4); });
+      });
       var rs = document.createElement("button"); rs.type = "button"; rs.className = "btn sm"; rs.textContent = t.reset;
       rs.setAttribute("data-reset", p.email);
       rs.addEventListener("click", function () { resetFor = { email: p.email, name: p.name || p.email }; renderView(4); });
@@ -1781,7 +1786,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
         rok.disabled = true;
         var who = resetFor;
         A.resetTempPw(who.email, ri.value).then(function () { staffMsg = { key: "resetMsg", n: who.name }; resetFor = null; renderView(4); },
-          function (err) { rok.disabled = false; rmsg.textContent = err.message === "short" ? t.eShort : t.eEmail; });
+          function (err) { rok.disabled = false; rmsg.textContent = err.message === "short" ? t.eShort : t.eNet; });
       });
       box.appendChild(rf);
     }
@@ -1811,7 +1816,7 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
         staffMsg = { key: "added", n: v("sfName").trim() }; renderView(4);
       }, function (err) {
         add.disabled = false;
-        msg.textContent = err.message === "exists" ? t.eExists : err.message === "short" ? t.eShort : t.eEmail;
+        msg.textContent = err.message === "exists" ? t.eExists : err.message === "short" ? t.eShort : err.message === "email" ? t.eEmail : t.eNet;
       });
     });
     box.appendChild(f);
@@ -1886,6 +1891,22 @@ html[data-theme="dark"] .btn.gold:active{background:linear-gradient(180deg,#c9a0
   renderStatic();
   renderGrid();
   if (SECTION === "admin") setTab(4);
+
+  // Свежие данные с сервера (свои после входа или чужие изменения): перечитать копию и перерисовать
+  window.addEventListener("slab:data", function () {
+    try { ADDED = JSON.parse(localStorage.getItem(ITEM_KEY) || "[]"); } catch (e) { ADDED = []; }
+    ITEMS = ADDED.slice();
+    if (matches) matches = matches.map(function (m) { return ITEMS.filter(function (y) { return y.code && y.code === m.code; })[0]; }).filter(Boolean);
+    var ed = loadEdits();
+    editState.removed = ed.removed || {};
+    editState.extra[4] = loadStaff();
+    editState.extra[5] = ed.catalog || [];
+    renderGrid();
+    if (currentTab > 0) renderView(currentTab);
+    renderCompanyBox();
+    renderTrial();
+  });
+  if (window.SlabCloud) window.SlabCloud.start().catch(function () {});
 })();
 </script>
 <script src="measure-core.js"></script>

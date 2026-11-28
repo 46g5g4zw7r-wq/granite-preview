@@ -36,6 +36,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
 
   await step("QR libraries load locally (no network) and every page loads without CSP violations", async function () {
     var ctx = await b.newContext();
+    await ctx.addInitScript({ content: require("./fake-init.js")({ as: "admin" }) });
     await ctx.route(/^https?:\/\/(?!localhost)/, function (r) { r.abort(); });
     var p = await ctx.newPage(), bad = [];
     p.on("console", function (m) { if (/Content Security Policy|Refused to/.test(m.text())) bad.push(m.text().slice(0, 160)); });
@@ -45,7 +46,10 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
     for (var pg of PAGES.filter(function (x) { return x !== "index.html"; })) { await p.goto("http://localhost:8768/" + pg + (pg === "app.html" ? "?s=office" : "")); await p.waitForTimeout(400); }
     await p.goto("http://localhost:8768/index.html"); await p.waitForTimeout(400);
     await p.goto("http://localhost:8768/print.html");
-    await p.evaluate(function () { sessionStorage.setItem("granite.session", JSON.stringify({ section: "admin", admin: true, email: "", name: "" })); });
+    await p.evaluate(function () {
+      sessionStorage.setItem("granite.session", JSON.stringify({ section: "admin", admin: true, email: "", name: "" }));
+      localStorage.setItem("__fakeUser", JSON.stringify({ id: "u-admin", email: "andrey_sazonov@icloud.com" })); // главная выходит из аккаунта
+    });
     await p.goto("http://localhost:8768/app.html?s=office"); await p.waitForTimeout(500);
     var libs = await p.evaluate(function () {
       return [typeof window.jsQR, !!(window.ZXing && window.ZXing.BrowserMultiFormatReader), !!(window.QRCode && window.QRCode.CorrectLevel)];

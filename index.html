@@ -2,7 +2,7 @@
 <html lang="ru" translate="no">
 <head>
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://diydirqvwvpmwatemgoe.supabase.co; media-src 'self' blob:; connect-src 'self' https://diydirqvwvpmwatemgoe.supabase.co wss://diydirqvwvpmwatemgoe.supabase.co; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
 
@@ -292,6 +292,8 @@ body.login-open .center{z-index:60}
   <p class="hint" id="hint"></p>
 </main>
 
+<script src="vendor/supabase.js"></script>
+<script src="cloud.js"></script>
 <script src="auth.js"></script>
 <script>
 (function () {
@@ -604,29 +606,29 @@ body.login-open .center{z-index:60}
           mustChange: "Это временный пароль от администратора. Придумайте свой (не меньше 8 символов).",
           other: "Ваш раздел — {s}. Войдите через кнопку «{s}».", wrongCred: "Неверный e-mail или пароль.",
           short: "Пароль должен быть не короче 8 символов.", same: "Новый пароль должен отличаться от временного.", mismatch: "Пароли не совпадают.", wait: "Проверяю…",
-          proto: "Прототип: учётные записи хранятся только в этом браузере.",
-          forgot: "Сброс пароля по e-mail появится после подключения Supabase. Пока обратитесь к администратору." },
+          proto: "", net: "Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.", notOwner: "Первый вход администратора доступен только владельцу (его e-mail).",
+          forgot: "Забыли пароль? Обратитесь к администратору — он выдаст временный пароль." },
     fr: { office: "Bureau", admin: "Admin", shop: "Atelier", pw2: "Répétez le mot de passe", newPw: "Nouveau mot de passe", newPw2: "Répétez le nouveau mot de passe",
           firstAdmin: "Première connexion de l’administrateur : choisissez un mot de passe (8 caractères minimum).",
           mustChange: "C’est un mot de passe temporaire de l’administrateur. Choisissez le vôtre (8 caractères minimum).",
           other: "Votre section : {s}. Connectez-vous avec le bouton « {s} ».", wrongCred: "E-mail ou mot de passe incorrect.",
           short: "Le mot de passe doit contenir au moins 8 caractères.", same: "Le nouveau mot de passe doit être différent du temporaire.", mismatch: "Les mots de passe ne correspondent pas.", wait: "Vérification…",
-          proto: "Prototype : les comptes sont enregistrés uniquement dans ce navigateur.",
-          forgot: "La réinitialisation par e-mail arrivera avec Supabase. En attendant, contactez l’administrateur." },
+          proto: "", net: "Pas de connexion au serveur. Vérifiez Internet et réessayez.", notOwner: "La première connexion administrateur est réservée au propriétaire (son e-mail).",
+          forgot: "Mot de passe oublié ? Demandez à l’administrateur un mot de passe temporaire." },
     en: { office: "Office", admin: "Admin", shop: "Shop floor", pw2: "Repeat password", newPw: "New password", newPw2: "Repeat new password",
           firstAdmin: "First administrator sign-in: choose a password (at least 8 characters).",
           mustChange: "This is a temporary password from the administrator. Choose your own (at least 8 characters).",
           other: "Your section is {s}. Sign in with the “{s}” button.", wrongCred: "Wrong e-mail or password.",
           short: "The password must be at least 8 characters.", same: "The new password must differ from the temporary one.", mismatch: "Passwords do not match.", wait: "Checking…",
-          proto: "Prototype: accounts are stored only in this browser.",
-          forgot: "Password reset by e-mail comes with Supabase. For now, ask the administrator." },
+          proto: "", net: "No connection to the server. Check the internet and try again.", notOwner: "The first administrator sign-in is for the owner only (their e-mail).",
+          forgot: "Forgot your password? Ask the administrator for a temporary one." },
     es: { office: "Oficina", admin: "Admin", shop: "Taller", pw2: "Repita la contraseña", newPw: "Contraseña nueva", newPw2: "Repita la contraseña nueva",
           firstAdmin: "Primer acceso del administrador: elija una contraseña (mínimo 8 caracteres).",
           mustChange: "Es una contraseña temporal del administrador. Elija la suya (mínimo 8 caracteres).",
           other: "Su sección es {s}. Entre con el botón «{s}».", wrongCred: "E-mail o contraseña incorrectos.",
           short: "La contraseña debe tener al menos 8 caracteres.", same: "La contraseña nueva debe ser distinta de la temporal.", mismatch: "Las contraseñas no coinciden.", wait: "Comprobando…",
-          proto: "Prototipo: las cuentas se guardan solo en este navegador.",
-          forgot: "El restablecimiento por e-mail llegará con Supabase. Mientras tanto, consulte al administrador." }
+          proto: "", net: "Sin conexión con el servidor. Compruebe Internet e inténtelo de nuevo.", notOwner: "El primer acceso de administrador es solo para el propietario (su e-mail).",
+          forgot: "¿Olvidó la contraseña? Pida al administrador una temporal." }
   };
   // Главная — всегда с чистого листа: вернулся сюда — вышел из раздела (общий компьютер в офисе)
   if (window.SlabAuth) window.SlabAuth.logout();
@@ -665,7 +667,7 @@ body.login-open .center{z-index:60}
   function setMode(mode) {
     cur.mode = mode;
     var admin = cur.section === "admin";
-    $("emailRow").hidden = admin || mode === "change";
+    $("emailRow").hidden = mode === "change";
     $("pwRow").hidden = mode === "change";
     $("pw2Row").hidden = mode !== "setAdmin";
     $("chgRows").hidden = mode !== "change";
@@ -675,12 +677,13 @@ body.login-open .center{z-index:60}
 
   function openLogin(section) {
     cur = { section: section, mode: "in", email: "", pw: "" };
-    setMode(section === "admin" && !window.SlabAuth.adminSet() ? "setAdmin" : "in");
+    setMode("in");
+    if (section === "admin") window.SlabAuth.adminExists().then(function (has) { if (!has && cur.section === "admin" && cur.mode === "in") setMode("setAdmin"); });
     loginBox.classList.add("open");
     sectionsEl.hidden = true;
     document.getElementById("supportLink").hidden = true;
     document.body.classList.add("login-open");
-    setTimeout(function () { (section === "admin" ? pwInput : $("email")).focus(); }, 60);
+    setTimeout(function () { $("email").focus(); }, 60);
   }
   function closeLogin() {
     loginBox.classList.remove("open");
@@ -716,12 +719,18 @@ body.login-open .center{z-index:60}
   loginForm.addEventListener("submit", function (e) {
     e.preventDefault();
     var L = LOGIN[currentLang], T = S(), A = window.SlabAuth;
-    if (!A || !(window.crypto && crypto.subtle)) { errEl.textContent = T.wrongCred; return; }
+    if (!A) { errEl.textContent = T.net; return; }
     if (cur.mode === "setAdmin") {
+      var am = $("email").value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(am)) return fail(L.emailBad);
       if (pwInput.value.length < A.MIN_PW) return fail(T.short);
       if (pwInput.value !== $("pw2").value) return fail(T.mismatch);
       submitBtn.disabled = true; errEl.textContent = T.wait;
-      A.setAdminPw(pwInput.value).then(function () { go("admin"); }, function () { fail(T.short); });
+      A.setAdminPw(am, pwInput.value).then(function (r) {
+        if (r.ok) return go("admin");
+        if (r.reason === "admin_exists") { setMode("in"); return fail(T.wrongCred); }
+        fail(r.reason === "short" ? T.short : r.reason === "not_owner" ? T.notOwner : T.net);
+      }, function () { fail(T.net); });
       return;
     }
     if (cur.mode === "change") {
@@ -730,14 +739,12 @@ body.login-open .center{z-index:60}
       if (np !== $("newPw2").value) return fail(T.mismatch);
       submitBtn.disabled = true; errEl.textContent = T.wait;
       if (np === cur.pw) return fail(T.same);
-      A.changePw(cur.email, cur.pw, np).then(function (r) { if (r.ok) go(r.section); else fail(r.reason === "same" ? T.same : T.wrongCred); });
+      A.changePw(cur.email, cur.pw, np).then(function (r) { if (r.ok) go(r.section); else fail(r.reason === "same" ? T.same : r.reason === "net" ? T.net : T.wrongCred); });
       return;
     }
-    var mail = cur.section === "admin" ? "" : $("email").value.trim();
-    if (cur.section !== "admin") {
-      if (!mail) return fail(L.emailEmpty);
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return fail(L.emailBad);
-    }
+    var mail = $("email").value.trim();
+    if (!mail) return fail(L.emailEmpty);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) return fail(L.emailBad);
     if (!pwInput.value) return fail(L.empty);
     submitBtn.disabled = true; errEl.textContent = T.wait;
     A.login(cur.section, mail, pwInput.value).then(function (r) {
@@ -745,8 +752,7 @@ body.login-open .center{z-index:60}
       if (r.ok) return go(r.section);
       if (r.mustChange) { cur.email = mail; cur.pw = pwInput.value; setMode("change"); setTimeout(function () { $("newPw").focus(); }, 30); return; }
       if (r.reason === "section") return fail(T.other.split("{s}").join(T[r.section]));
-      if (r.reason === "admin_unset") { setMode("setAdmin"); return; }
-      fail(T.wrongCred);
+      fail(r.reason === "net" ? T.net : T.wrongCred);
     });
   });
 

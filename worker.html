@@ -2,9 +2,11 @@
 <html lang="ru" translate="no">
 <head>
 <meta name="google" content="notranslate">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://diydirqvwvpmwatemgoe.supabase.co; media-src 'self' blob:; connect-src 'self' https://diydirqvwvpmwatemgoe.supabase.co wss://diydirqvwvpmwatemgoe.supabase.co; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <script>if(window.top!==window.self){document.documentElement.style.display="none";try{window.top.location=window.self.location.href;}catch(e){}}</script>
 <script>if(location.protocol==="http:"&&location.hostname!=="localhost"&&location.hostname!=="127.0.0.1"){location.replace("https://"+location.host+location.pathname+location.search+location.hash);}</script>
+<script src="vendor/supabase.js"></script>
+<script src="cloud.js"></script>
 <script src="auth.js"></script>
 <script>
 // Отметка работы — только для цеха (и админа). Вход теперь на главной.
@@ -314,10 +316,12 @@ main{max-width:560px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-dire
   // Если сотрудник уже вошёл в этой вкладке, восстанавливаем его
   var ADMIN_NAME = { ru: "Админ", fr: "Admin", en: "Admin", es: "Admin" };
   var ses = window.SlabAuth && window.SlabAuth.session();
-  var restored = ses && ses.email ? findStaff(ses.email) : null;
+  var restored = ses && ses.email && !ses.admin ? { name: ses.name || ses.email, role: ses.position || "", email: ses.email } : null;
   if (restored) { me = restored; showWork(); }
   else if (ses && ses.admin) { me = { name: ADMIN_NAME[lang] || ADMIN_NAME.ru, role: "", email: "", admin: true }; showWork(); }
   else { window.location.href = "index.html"; }
+  window.addEventListener("slab:data", function () { if (me) renderWork(); });
+  if (window.SlabCloud) window.SlabCloud.start().catch(function () {});
 })();
 </script>
 </body>

@@ -13,7 +13,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
 (async function () {
   await new Promise(function (r) { setTimeout(r, 700); });
   var b = await chromium.launch();
-  var ctx = await b.newContext(); var p = await ctx.newPage();
+  var ctx = await b.newContext(); await ctx.addInitScript({ content: require("./fake-init.js")({}) }); var p = await ctx.newPage();
   var errs = []; p.on("pageerror", function (e) { errs.push(e.message); });
   async function home(lang) {
     await p.goto(B + "index.html"); await p.waitForTimeout(300);
@@ -51,8 +51,8 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
   await step("admin first sign-in sets the password and opens the admin section", async function () {
     await home("ru");
     await p.click("#goAdmin"); await p.waitForSelector("#login.open");
-    assert.ok(!(await p.isVisible("#email")), "email asked for admin");
-    assert.ok(await p.isVisible("#pw2"), "no repeat field on first admin sign-in");
+    await p.waitForSelector("#pw2", { state: "visible", timeout: 5000 });
+    await p.fill("#email", "andrey_sazonov@icloud.com");
     await p.fill("#pw", "adminpass1"); await p.fill("#pw2", "adminpass1"); await p.click("#submitBtn");
     await p.waitForURL(/app\.html\?s=admin/, { timeout: 15000 });
   });
@@ -129,7 +129,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
     });
 
     await step("admin removes a worker -> that worker can no longer sign in", async function () {
-      await home("ru"); await signIn("#goAdmin", null, "adminpass1");
+      await home("ru"); await signIn("#goAdmin", "andrey_sazonov@icloud.com", "adminpass1");
       await p.waitForURL(/app\.html\?s=admin/, { timeout: 15000 }); await p.waitForTimeout(400);
       await p.click('#view [data-del="ivan@x.ca"]'); await p.waitForTimeout(300);
       await p.click("#logoutBtn"); await p.waitForURL(/index\.html/);
@@ -138,7 +138,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
     });
 
     await step("trial bar shows days left; 'need more time' disabled under 50 pieces", async function () {
-      await home("ru"); await signIn("#goAdmin", null, "adminpass1");
+      await home("ru"); await signIn("#goAdmin", "andrey_sazonov@icloud.com", "adminpass1");
       await p.waitForURL(/app\.html\?s=admin/, { timeout: 15000 }); await p.waitForTimeout(400);
       assert.ok(/30|29/.test(await p.textContent("#trialBar")), await p.textContent("#trialBar"));
       assert.ok(await p.isDisabled("#trialMore"), "extension available with < 50 pieces");
@@ -153,7 +153,7 @@ async function step(n, f) { try { await f(); results.push("PASS " + n); } catch 
 
   if (!ONLY_HOME) {
     await step("admin can open the Office and Shop floor sections from the header", async function () {
-      await home("ru"); await signIn("#goAdmin", null, "adminpass1");
+      await home("ru"); await signIn("#goAdmin", "andrey_sazonov@icloud.com", "adminpass1");
       await p.waitForURL(/app\.html\?s=admin/, { timeout: 15000 }); await p.waitForTimeout(300);
       await p.click("#secOffice"); await p.waitForURL(/app\.html\?s=office/, { timeout: 5000 }); await p.waitForTimeout(300);
       assert.ok(await p.isVisible("#labelsBtn"), "QR labels not reachable for admin");
